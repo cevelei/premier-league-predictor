@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
-  <link rel="stylesheet" href="styles.css?v=5.1" />
+  <link rel="stylesheet" href="styles.css?v=6.0" />
   <style>
     .rank-row.empty.drop-target {
       border-color: #5c1265;
@@ -67,7 +67,7 @@
       </div>
 
       <div class="deadline-banner">
-        <span id="deadlineLabel">Locks</span>
+        <span id="deadlineLabel">Deadline</span>
         <strong id="deadlineText">21 Aug · 8:00pm UK</strong>
       </div>
 
@@ -75,6 +75,7 @@
         <button class="tab active" data-tab="myPrediction" type="button">My Prediction</button>
         <button class="tab" data-tab="players" type="button">Players</button>
         <button class="tab" data-tab="predictions" type="button">Predictions</button>
+        <button class="tab" data-tab="leaderboard" type="button">Leaderboard</button>
       </nav>
 
       <section id="myPrediction" class="tab-panel">
@@ -137,6 +138,39 @@
 
           <div id="predictionCards" class="prediction-cards hidden"></div>
         </section>
+
+      <section id="leaderboard" class="tab-panel hidden">
+        <section class="card">
+          <div class="section-row">
+            <div>
+              <h3>Predictor leaderboard</h3>
+              <p class="muted compact">2 pts exact · 1 pt one place away · 0 pts otherwise</p>
+            </div>
+            <span class="small-pill">Max 20</span>
+          </div>
+
+          <div id="leaderboardLocked" class="locked-panel">
+            <div class="lock-icon">🔒</div>
+            <h3>Leaderboard unlocks after the deadline</h3>
+            <p class="muted">Scores stay hidden while predictions can still be changed.</p>
+          </div>
+
+          <div id="leaderboardContent" class="hidden">
+            <div id="leaderboardList" class="leaderboard-list"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-row">
+            <div>
+              <h3>Current Premier League table</h3>
+              <p id="standingsUpdated" class="muted compact">Waiting for standings data.</p>
+            </div>
+          </div>
+          <div id="standingsTable" class="standings-table"></div>
+        </section>
+      </section>
+
       </section>
     </section>
   </main>
@@ -168,6 +202,9 @@
     let competitionPredictions = [];
     let competitionState = null;
     let draggedIndex = null;
+    let liveStandings = [];
+    let predictorLeaderboard = [];
+    let playerBreakdown = [];
 
     function showScreen(name) {
       Object.values(screens).forEach(el => el.classList.add("hidden"));
@@ -262,6 +299,39 @@
 
       renderPlayers();
       renderSharedPredictions();
+    }
+
+
+    async function loadLiveStandings() {
+      const { data, error } = await supabase.rpc("get_live_standings", {
+        p_slug: COMPETITION_SLUG
+      });
+
+      if (error) throw error;
+      liveStandings = data ?? [];
+      renderStandings();
+    }
+
+    async function loadLeaderboard() {
+      predictorLeaderboard = [];
+      playerBreakdown = [];
+
+      if (!competitionState?.predictions_visible) {
+        renderLeaderboard();
+        return;
+      }
+
+      const [leaderboardResult, breakdownResult] = await Promise.all([
+        supabase.rpc("get_predictor_leaderboard", { p_slug: COMPETITION_SLUG }),
+        supabase.rpc("get_predictor_breakdown", { p_slug: COMPETITION_SLUG })
+      ]);
+
+      if (leaderboardResult.error) throw leaderboardResult.error;
+      if (breakdownResult.error) throw breakdownResult.error;
+
+      predictorLeaderboard = leaderboardResult.data ?? [];
+      playerBreakdown = breakdownResult.data ?? [];
+      renderLeaderboard();
     }
 
     async function initialise() {
@@ -365,8 +435,8 @@
 
     async function openApp() {
       await loadCompetitionState();
-      await Promise.all([loadTeams(), loadPrediction()]);
-      await loadSharedCompetitionData();
+      await Promise.all([loadTeams(), loadPrediction(), loadLiveStandings()]);
+      await Promise.all([loadSharedCompetitionData(), loadLeaderboard()]);
 
       document.getElementById("playerHeading").textContent =
         `${currentPlayer.player_name}'s dashboard`;
@@ -381,7 +451,7 @@
       const visible = Boolean(competitionState?.predictions_visible);
 
       const deadlineLabel = document.getElementById("deadlineLabel");
-      deadlineLabel.textContent = locked ? "Locked" : "Locks";
+      deadlineLabel.textContent = "Deadline";
 
       document.getElementById("teamsCard").classList.toggle("hidden", locked);
       document.getElementById("submitCard").classList.toggle("hidden", locked);
@@ -396,6 +466,9 @@
       document.getElementById("predictionsIntro").textContent = visible
         ? "Open a player to see their submitted Top 10."
         : "Predictions unlock after the deadline.";
+
+      document.getElementById("leaderboardLocked").classList.toggle("hidden", visible);
+      document.getElementById("leaderboardContent").classList.toggle("hidden", !visible);
 
       updateSaveStatus();
     }
@@ -614,6 +687,103 @@
       }).join("");
     }
 
+
+    function renderStandings() {
+      const container = document.getElementById("standingsTable");
+      const updated = document.getElementById("standingsUpdated");
+
+      if (!liveStandings.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>No standings loaded yet</strong>
+            <span>We’ll connect the live football feed next.</span>
+          </div>`;
+        updated.textContent = "Waiting for standings data.";
+        return;
+      }
+
+      const latest = liveStandings
+        .map(row => row.updated_at)
+        .filter(Boolean)
+        .sort()
+        .at(-1);
+
+      updated.textContent = latest
+        ? `Last updated ${new Date(latest).toLocaleString("en-GB", {
+            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+          })}`
+        : "Current standings";
+
+      container.innerHTML = `
+        <div class="standings-head">
+          <span>Pos</span><span>Team</span><span>PL</span><span>GD</span><span>Pts</span>
+        </div>
+        ${liveStandings.map(row => `
+          <div class="standings-row">
+            <span class="position-cell">${row.position}</span>
+            <span class="standings-team">
+              <span class="badge">${escapeHtml(row.short_name || "")}</span>
+              <strong>${escapeHtml(row.team_name)}</strong>
+            </span>
+            <span>${row.played}</span>
+            <span>${row.goal_difference > 0 ? "+" : ""}${row.goal_difference}</span>
+            <strong>${row.points}</strong>
+          </div>
+        `).join("")}`;
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById("leaderboardList");
+
+      if (!competitionState?.predictions_visible) {
+        container.innerHTML = "";
+        return;
+      }
+
+      if (!liveStandings.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>Leaderboard waiting for standings</strong>
+            <span>Scores will calculate automatically once the current PL table is loaded.</span>
+          </div>`;
+        return;
+      }
+
+      if (!predictorLeaderboard.length) {
+        container.innerHTML = `<p class="muted">No submitted players to score yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = predictorLeaderboard.map((player, index) => {
+        const breakdown = playerBreakdown
+          .filter(row => row.player_id === player.player_id)
+          .sort((a, b) => a.predicted_position - b.predicted_position);
+
+        return `
+          <details class="leader-row" ${index === 0 ? "open" : ""}>
+            <summary>
+              <span class="leader-position">${index + 1}</span>
+              <span class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</span>
+              <span class="leader-name">
+                <strong>${escapeHtml(player.player_name)}</strong>
+                <small>${player.exact_picks} exact · ${player.near_picks} one away</small>
+              </span>
+              <span class="leader-score">${player.score}<small>/20</small></span>
+            </summary>
+            <div class="score-breakdown">
+              ${breakdown.map(row => `
+                <div class="score-row">
+                  <span class="rank-number">${row.predicted_position}</span>
+                  <span class="score-team">${escapeHtml(row.team_name)}</span>
+                  <span class="actual-pos">Now ${row.actual_position ?? "—"}</span>
+                  <span class="points-badge points-${row.points_awarded}">${row.points_awarded} pt${row.points_awarded === 1 ? "" : "s"}</span>
+                </div>
+              `).join("")}
+            </div>
+          </details>`;
+      }).join("");
+    }
+
     function moveTeam(index, direction) {
       if (competitionState?.is_locked) return;
       const target = index + direction;
@@ -664,7 +834,7 @@
 
         setMessage(predictionMessage, "Prediction saved successfully.", true);
         updateSaveStatus();
-        await loadSharedCompetitionData();
+        await Promise.all([loadSharedCompetitionData(), loadLeaderboard()]);
       } catch (error) {
         setMessage(predictionMessage, error?.message || "Could not save prediction.");
       } finally {
