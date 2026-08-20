@@ -5,12 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
-  <link rel="stylesheet" href="styles.css?v=6.0" />
+  <link rel="stylesheet" href="styles.css?v=6.1" />
   <style>
     .rank-row.empty.drop-target {
       border-color: #5c1265;
       background: #f3edf5;
       box-shadow: inset 0 0 0 1px #5c1265;
+    }
+  </style>
+  <style>
+    .locked-note {
+      margin: -2px 0 0;
+      max-width: 520px;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -75,7 +82,7 @@
         <button class="tab active" data-tab="myPrediction" type="button">My Prediction</button>
         <button class="tab" data-tab="players" type="button">Players</button>
         <button class="tab" data-tab="predictions" type="button">Predictions</button>
-        <button class="tab" data-tab="leaderboard" type="button">Leaderboard</button>
+        <button id="leaderboardTab" class="tab" data-tab="leaderboard" type="button">Leaderboard 🔒</button>
       </nav>
 
       <section id="myPrediction" class="tab-panel">
@@ -151,8 +158,9 @@
 
           <div id="leaderboardLocked" class="locked-panel">
             <div class="lock-icon">🔒</div>
-            <h3>Leaderboard unlocks after the deadline</h3>
-            <p class="muted">Scores stay hidden while predictions can still be changed.</p>
+            <h3>Leaderboard is locked</h3>
+            <p class="muted">Scores will appear after the prediction deadline.</p>
+            <p class="muted locked-note">Once predictions are locked, everyone will be scored against the current Premier League table.</p>
           </div>
 
           <div id="leaderboardContent" class="hidden">
@@ -469,6 +477,9 @@
 
       document.getElementById("leaderboardLocked").classList.toggle("hidden", visible);
       document.getElementById("leaderboardContent").classList.toggle("hidden", !visible);
+      document.getElementById("leaderboardTab").textContent = visible
+        ? "Leaderboard"
+        : "Leaderboard 🔒";
 
       updateSaveStatus();
     }
