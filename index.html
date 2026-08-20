@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
-  <link rel="stylesheet" href="styles.css?v=5.0" />
+  <link rel="stylesheet" href="styles.css?v=5.1" />
 </head>
 <body>
   <main class="shell">
@@ -155,7 +155,7 @@
     const predictionMessage = document.getElementById("predictionMessage");
 
     let teams = [];
-    let ranking = [];
+    let ranking = Array(10).fill(null);
     let currentPlayer = null;
     let competitionPlayers = [];
     let competitionPredictions = [];
@@ -222,11 +222,17 @@
       });
       if (error) throw error;
 
-      ranking = (data ?? []).map(row => ({
-        id: row.team_id,
-        name: row.team_name,
-        short_name: row.short_name
-      }));
+      ranking = Array(10).fill(null);
+      (data ?? []).forEach((row, index) => {
+        const position = Number(row.predicted_position ?? (index + 1)) - 1;
+        if (position >= 0 && position < 10) {
+          ranking[position] = {
+            id: row.team_id,
+            name: row.team_name,
+            short_name: row.short_name
+          };
+        }
+      });
     }
 
     async function loadSharedCompetitionData() {
@@ -390,7 +396,7 @@
     function updateSaveStatus() {
       const pill = document.getElementById("saveStatus");
 
-      if (ranking.length === 10) {
+      if (ranking.length === 10 && ranking.every(Boolean)) {
         pill.textContent = competitionState?.is_locked ? "Locked" : "Submitted";
         pill.classList.add("saved");
       } else {
@@ -402,7 +408,7 @@
     function render() {
       renderRanking();
       renderTeams();
-      document.getElementById("selectedCount").textContent = ranking.length;
+      document.getElementById("selectedCount").textContent = ranking.filter(Boolean).length;
     }
 
     function renderRanking() {
@@ -443,7 +449,7 @@
           <span class="team-name">${escapeHtml(team.name)}</span>
           <span class="row-actions">
             <button class="mini-btn up-btn" type="button" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
-            <button class="mini-btn down-btn" type="button" aria-label="Move down" ${i === ranking.length - 1 ? "disabled" : ""}>↓</button>
+            <button class="mini-btn down-btn" type="button" aria-label="Move down" ${i === 9 ? "disabled" : ""}>↓</button>
             <button class="mini-btn remove-btn" type="button" aria-label="Remove">×</button>
           </span>`;
 
@@ -467,8 +473,8 @@
           event.preventDefault();
           const targetIndex = Number(li.dataset.index);
           if (draggedIndex === null || draggedIndex === targetIndex) return;
-          const [moved] = ranking.splice(draggedIndex, 1);
-          ranking.splice(targetIndex, 0, moved);
+          [ranking[draggedIndex], ranking[targetIndex]] =
+            [ranking[targetIndex], ranking[draggedIndex]];
           markChanged();
           render();
         });
@@ -484,18 +490,21 @@
       if (competitionState?.is_locked) return;
 
       teams.forEach(team => {
-        const selected = ranking.some(t => t.id === team.id);
+        const selected = ranking.some(t => t?.id === team.id);
+        const hasEmptySlot = ranking.some(t => !t);
         const button = document.createElement("button");
         button.type = "button";
         button.className = "team-choice" + (selected ? " selected" : "");
-        button.disabled = selected || ranking.length >= 10;
+        button.disabled = selected || !hasEmptySlot;
         button.innerHTML = `
           <span class="badge">${escapeHtml(team.short_name || "")}</span>
           <span>${escapeHtml(team.name)}</span>`;
 
         button.addEventListener("click", () => {
-          if (ranking.length >= 10 || selected) return;
-          ranking.push(team);
+          if (selected) return;
+          const emptyIndex = ranking.findIndex(t => !t);
+          if (emptyIndex === -1) return;
+          ranking[emptyIndex] = team;
           markChanged();
           render();
         });
@@ -572,7 +581,7 @@
     function moveTeam(index, direction) {
       if (competitionState?.is_locked) return;
       const target = index + direction;
-      if (target < 0 || target >= ranking.length) return;
+      if (target < 0 || target >= 10) return;
       [ranking[index], ranking[target]] = [ranking[target], ranking[index]];
       markChanged();
       render();
@@ -580,7 +589,7 @@
 
     function removeTeam(index) {
       if (competitionState?.is_locked) return;
-      ranking.splice(index, 1);
+      ranking[index] = null;
       markChanged();
       render();
     }
@@ -600,7 +609,7 @@
         return;
       }
 
-      if (ranking.length !== 10) {
+      if (ranking.length !== 10 || !ranking.every(Boolean)) {
         setMessage(predictionMessage, "Choose all 10 teams before submitting.");
         return;
       }
@@ -655,7 +664,7 @@
 
     document.getElementById("clearBtn").addEventListener("click", () => {
       if (competitionState?.is_locked) return;
-      ranking = [];
+      ranking = Array(10).fill(null);
       markChanged();
       render();
     });
