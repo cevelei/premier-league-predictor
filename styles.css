@@ -215,6 +215,10 @@ button:disabled { opacity: .35; cursor: default; }
   color: #aaa1ad;
 }
 
+.rank-row.readonly {
+  grid-template-columns: 36px 44px minmax(0, 1fr);
+}
+
 .rank-row.dragging {
   opacity: .55;
   border-color: var(--pl2);
@@ -338,6 +342,19 @@ button:disabled { opacity: .35; cursor: default; }
   color: var(--muted);
 }
 
+.locked-panel {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 34px 18px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.lock-icon { font-size: 28px; }
+
 .prediction-card {
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -377,32 +394,20 @@ button:disabled { opacity: .35; cursor: default; }
   border-top: 1px solid var(--border);
 }
 
-.debug-panel {
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: white;
-}
-
 @media (max-width: 600px) {
   .shell { padding-top: 14px; }
   .brand { padding-bottom: 16px; }
   .button-grid { grid-template-columns: 1fr; }
   .team-grid { grid-template-columns: 1fr; }
-  .tabs { grid-template-columns: 1fr 1fr 1fr; }
 
   .rank-row {
     grid-template-columns: 32px 32px minmax(0, 1fr) auto;
     gap: 5px;
     padding-inline: 6px;
+  }
+
+  .rank-row.readonly {
+    grid-template-columns: 32px 42px minmax(0,1fr);
   }
 
   .mini-btn { min-width: 30px; width: 30px; }
