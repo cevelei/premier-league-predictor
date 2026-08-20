@@ -1,59 +1,189 @@
 * { box-sizing: border-box; }
+
+:root {
+  --pl: #37003c;
+  --pl-light: #5c1265;
+  --green: #00a86b;
+  --bg: #f5f2f6;
+  --card: #ffffff;
+  --text: #1d1720;
+  --muted: #726b76;
+  --border: #e6e0e8;
+  --danger: #b42318;
+}
+
 body {
   margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f6f3f7;
-  color: #17131b;
 }
-.wrap { width: min(720px, calc(100% - 32px)); margin: 64px auto; }
-.card {
-  background: #fff;
-  border: 1px solid #e8e2ea;
-  border-radius: 18px;
-  padding: 24px;
+
+.shell {
+  width: min(640px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 36px 0 60px;
 }
-.eyebrow {
+
+.brand {
+  padding: 18px 4px 24px;
+}
+
+.brand h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(32px, 8vw, 50px);
+  line-height: 1;
+}
+
+.brand p:last-child {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.eyebrow, .step {
+  margin: 0;
   font-size: 12px;
   letter-spacing: .12em;
-  font-weight: 800;
-  color: #5b0866;
+  font-weight: 850;
+  color: var(--pl-light);
 }
-h1 { margin: 6px 0 10px; }
-.muted { color: #6f6875; line-height: 1.5; }
-.status-list { display: grid; gap: 10px; margin: 24px 0; }
-.status-list > div { display: flex; align-items: center; gap: 10px; }
-.dot { width: 11px; height: 11px; border-radius: 999px; display: inline-block; }
-.pending { background: #c7c2ca; }
-.ok { background: #14a44d; }
-.bad { background: #c62828; }
-label { display: block; font-weight: 800; margin-bottom: 7px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+}
+
+.hidden { display: none; }
+
+h2 {
+  margin: 6px 0 10px;
+  font-size: 26px;
+}
+
+.muted {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+label {
+  display: block;
+  margin: 18px 0 7px;
+  font-weight: 800;
+}
+
 input {
   width: 100%;
-  padding: 13px 14px;
-  border: 1px solid #d8d1db;
-  border-radius: 11px;
+  min-height: 50px;
+  border: 1px solid #d7cfd9;
+  border-radius: 12px;
+  padding: 12px 14px;
   font: inherit;
+  font-size: 16px;
 }
+
+input:focus {
+  outline: 3px solid rgba(55, 0, 60, .12);
+  border-color: var(--pl);
+}
+
 button {
   width: 100%;
-  margin-top: 12px;
-  padding: 13px 14px;
+  min-height: 50px;
+  margin-top: 14px;
   border: 0;
-  border-radius: 11px;
-  background: #37003c;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--pl);
   color: white;
   font: inherit;
-  font-weight: 800;
+  font-weight: 850;
   cursor: pointer;
 }
-button:disabled { opacity: .6; cursor: wait; }
-.message { min-height: 24px; font-weight: 700; }
-details { margin-top: 20px; }
+
+button.secondary {
+  background: #eee8ef;
+  color: var(--pl);
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.message {
+  min-height: 22px;
+  margin-bottom: 0;
+  font-weight: 750;
+}
+
+.error-text { color: var(--danger); }
+.ok-text { color: var(--green); }
+
+.success-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e7f7ef;
+  color: var(--green);
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.info-box {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.info-box > div {
+  display: grid;
+  gap: 3px;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-box > div:last-child { border-bottom: 0; }
+
+.info-box span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tiny {
+  font-size: 13px;
+  text-align: center;
+}
+
+.debug-panel {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 pre {
   white-space: pre-wrap;
-  word-break: break-word;
-  background: #f6f3f7;
+  overflow-wrap: anywhere;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 12px;
-  border-radius: 10px;
-  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .shell { padding-top: 18px; }
+  .card { padding: 18px; }
+  .button-grid { grid-template-columns: 1fr; }
 }
