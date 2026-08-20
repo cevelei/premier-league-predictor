@@ -6,6 +6,13 @@
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
   <link rel="stylesheet" href="styles.css?v=5.1" />
+  <style>
+    .rank-row.empty.drop-target {
+      border-color: #5c1265;
+      background: #f3edf5;
+      box-shadow: inset 0 0 0 1px #5c1265;
+    }
+  </style>
 </head>
 <body>
   <main class="shell">
@@ -423,9 +430,38 @@
 
         if (!team) {
           li.className = "rank-row empty";
+          li.dataset.index = String(i);
           li.innerHTML = `
             <span class="rank-number">${i + 1}</span>
             <span class="empty-label">${locked ? "No team selected" : "Choose a team"}</span>`;
+
+          if (!locked) {
+            li.addEventListener("dragover", event => {
+              event.preventDefault();
+              li.classList.add("drop-target");
+            });
+
+            li.addEventListener("dragleave", () => {
+              li.classList.remove("drop-target");
+            });
+
+            li.addEventListener("drop", event => {
+              event.preventDefault();
+              li.classList.remove("drop-target");
+
+              const targetIndex = Number(li.dataset.index);
+
+              if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+              [ranking[draggedIndex], ranking[targetIndex]] =
+                [ranking[targetIndex], ranking[draggedIndex]];
+
+              draggedIndex = null;
+              markChanged();
+              render();
+            });
+          }
+
           list.appendChild(li);
           continue;
         }
