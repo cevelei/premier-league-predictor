@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
-  <link rel="stylesheet" href="styles.css?v=3.1" />
+  <link rel="stylesheet" href="styles.css?v=4.0" />
 </head>
 <body>
   <main class="shell">
@@ -27,7 +27,6 @@
 
       <label for="competitionPassword">Competition password</label>
       <input id="competitionPassword" type="password" autocomplete="current-password" />
-
       <button id="joinCompetitionBtn" type="button">Enter competition</button>
       <p id="competitionMessage" class="message" aria-live="polite"></p>
     </section>
@@ -48,15 +47,14 @@
         <button id="createPlayerBtn" type="button">I'm new</button>
         <button id="linkPlayerBtn" class="secondary" type="button">I already joined</button>
       </div>
-
       <p id="playerMessage" class="message" aria-live="polite"></p>
     </section>
 
-    <section class="hidden" id="predictorScreen">
+    <section class="hidden" id="appScreen">
       <div class="dashboard-head">
         <div>
-          <p class="step">YOUR PREDICTION</p>
-          <h2 id="playerHeading">Top 10</h2>
+          <p class="step">COMPETITION</p>
+          <h2 id="playerHeading">Your dashboard</h2>
         </div>
         <span id="saveStatus" class="status-pill">Not submitted</span>
       </div>
@@ -66,33 +64,65 @@
         <strong>21 Aug · 8:00pm UK</strong>
       </div>
 
-      <section class="card ranking-card">
-        <div class="section-row">
-          <div>
-            <h3>Your Top 10</h3>
-            <p class="muted compact">Add teams, then drag the handle or use ↑ ↓ to reorder.</p>
-          </div>
-          <button id="clearBtn" class="text-button" type="button">Clear</button>
-        </div>
+      <nav class="tabs" aria-label="Competition sections">
+        <button class="tab active" data-tab="myPrediction" type="button">My Prediction</button>
+        <button class="tab" data-tab="players" type="button">Players</button>
+        <button class="tab" data-tab="predictions" type="button">Predictions</button>
+      </nav>
 
-        <ol id="rankingList" class="ranking-list"></ol>
+      <section id="myPrediction" class="tab-panel">
+        <section class="card ranking-card">
+          <div class="section-row">
+            <div>
+              <h3>Your Top 10</h3>
+              <p class="muted compact">Add teams, then drag the handle or use ↑ ↓ to reorder.</p>
+            </div>
+            <button id="clearBtn" class="text-button" type="button">Clear</button>
+          </div>
+          <ol id="rankingList" class="ranking-list"></ol>
+        </section>
+
+        <section class="card teams-card">
+          <div class="section-row">
+            <div>
+              <h3>Choose teams</h3>
+              <p class="muted compact"><span id="selectedCount">0</span>/10 selected</p>
+            </div>
+          </div>
+          <div id="teamGrid" class="team-grid"></div>
+        </section>
+
+        <section class="card submit-card">
+          <h3>Ready?</h3>
+          <p class="muted compact">You can change and resubmit your prediction until the deadline.</p>
+          <button id="submitPredictionBtn" type="button">Submit prediction</button>
+          <p id="predictionMessage" class="message" aria-live="polite"></p>
+        </section>
       </section>
 
-      <section class="card teams-card">
-        <div class="section-row">
-          <div>
-            <h3>Choose teams</h3>
-            <p class="muted compact"><span id="selectedCount">0</span>/10 selected</p>
+      <section id="players" class="tab-panel hidden">
+        <section class="card">
+          <div class="section-row">
+            <div>
+              <h3>Players</h3>
+              <p class="muted compact">Who has entered and who has submitted.</p>
+            </div>
+            <span id="playerCountBadge" class="small-pill">0 players</span>
           </div>
-        </div>
-        <div id="teamGrid" class="team-grid"></div>
+          <div id="playersList" class="players-list"></div>
+        </section>
       </section>
 
-      <section class="card submit-card">
-        <h3>Ready?</h3>
-        <p class="muted compact">You can change and resubmit your prediction until the deadline.</p>
-        <button id="submitPredictionBtn" type="button">Submit prediction</button>
-        <p id="predictionMessage" class="message" aria-live="polite"></p>
+      <section id="predictions" class="tab-panel hidden">
+        <section class="card">
+          <div class="section-row">
+            <div>
+              <h3>Everyone's predictions</h3>
+              <p class="muted compact">Open a player to see their submitted Top 10.</p>
+            </div>
+          </div>
+          <div id="predictionCards" class="prediction-cards"></div>
+        </section>
       </section>
     </section>
 
@@ -105,8 +135,6 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
 
-    // Replace these two placeholders with the same REAL public values
-    // already used in your working V2 GitHub page.
     const SUPABASE_URL = "https://dzwtabmclyztofbcdhlu.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-2ySWaGGO-Uft-rwBxxbwA_wsqfI-fD";
     const COMPETITION_SLUG = "halfway-2026-27";
@@ -117,7 +145,7 @@
       loading: document.getElementById("loadingScreen"),
       competition: document.getElementById("competitionScreen"),
       player: document.getElementById("playerScreen"),
-      predictor: document.getElementById("predictorScreen")
+      app: document.getElementById("appScreen")
     };
 
     const debug = document.getElementById("debug");
@@ -129,6 +157,8 @@
     let ranking = [];
     let currentPlayer = null;
     let draggedIndex = null;
+    let competitionPlayers = [];
+    let competitionPredictions = [];
 
     function showScreen(name) {
       Object.values(screens).forEach(el => el.classList.add("hidden"));
@@ -148,7 +178,6 @@
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       if (sessionData.session) return;
-
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
     }
@@ -158,7 +187,6 @@
         .from("competition_members")
         .select("competition_id")
         .limit(1);
-
       if (error) throw error;
       return Boolean(data?.length);
     }
@@ -176,7 +204,6 @@
         .from("teams")
         .select("id,name,short_name")
         .order("name");
-
       if (error) throw error;
       teams = data ?? [];
     }
@@ -185,7 +212,6 @@
       const { data, error } = await supabase.rpc("get_my_prediction", {
         p_slug: COMPETITION_SLUG
       });
-
       if (error) throw error;
 
       ranking = (data ?? []).map(row => ({
@@ -194,10 +220,23 @@
         short_name: row.short_name
       }));
 
-      if (ranking.length === 10) {
-        document.getElementById("saveStatus").textContent = "Submitted";
-        document.getElementById("saveStatus").classList.add("saved");
-      }
+      updateSaveStatus();
+    }
+
+    async function loadSharedCompetitionData() {
+      const [playersResult, predictionsResult] = await Promise.all([
+        supabase.rpc("get_competition_players", { p_slug: COMPETITION_SLUG }),
+        supabase.rpc("get_competition_predictions", { p_slug: COMPETITION_SLUG })
+      ]);
+
+      if (playersResult.error) throw playersResult.error;
+      if (predictionsResult.error) throw predictionsResult.error;
+
+      competitionPlayers = playersResult.data ?? [];
+      competitionPredictions = predictionsResult.data ?? [];
+
+      renderPlayers();
+      renderSharedPredictions();
     }
 
     async function initialise() {
@@ -216,7 +255,7 @@
           return;
         }
 
-        await openPredictor();
+        await openApp();
       } catch (error) {
         log(error);
         screens.loading.innerHTML = `
@@ -281,7 +320,7 @@
       }
 
       currentPlayer = data?.[0] ?? { player_name: input.name };
-      await openPredictor();
+      await openApp();
     }
 
     async function linkPlayer() {
@@ -301,16 +340,26 @@
       }
 
       currentPlayer = data?.[0] ?? { player_name: input.name };
-      await openPredictor();
+      await openApp();
     }
 
-    async function openPredictor() {
-      await loadTeams();
-      await loadPrediction();
+    async function openApp() {
+      await Promise.all([loadTeams(), loadPrediction(), loadSharedCompetitionData()]);
       document.getElementById("playerHeading").textContent =
-        `${currentPlayer.player_name}'s Top 10`;
+        `${currentPlayer.player_name}'s dashboard`;
       render();
-      showScreen("predictor");
+      showScreen("app");
+    }
+
+    function updateSaveStatus() {
+      const pill = document.getElementById("saveStatus");
+      if (ranking.length === 10) {
+        pill.textContent = "Submitted";
+        pill.classList.add("saved");
+      } else {
+        pill.textContent = "Not submitted";
+        pill.classList.remove("saved");
+      }
     }
 
     function render() {
@@ -345,8 +394,8 @@
           <button class="drag-handle" type="button" aria-label="Drag ${escapeHtml(team.name)}">☰</button>
           <span class="team-name">${escapeHtml(team.name)}</span>
           <span class="row-actions">
-            <button class="mini-btn up-btn" type="button" aria-label="Move up">↑</button>
-            <button class="mini-btn down-btn" type="button" aria-label="Move down">↓</button>
+            <button class="mini-btn up-btn" type="button" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
+            <button class="mini-btn down-btn" type="button" aria-label="Move down" ${i === ranking.length - 1 ? "disabled" : ""}>↓</button>
             <button class="mini-btn remove-btn" type="button" aria-label="Remove">×</button>
           </span>`;
 
@@ -372,54 +421,12 @@
           if (draggedIndex === null || draggedIndex === targetIndex) return;
           const [moved] = ranking.splice(draggedIndex, 1);
           ranking.splice(targetIndex, 0, moved);
+          markChanged();
           render();
         });
 
         list.appendChild(li);
       }
-
-      enableTouchReorder(list);
-    }
-
-    // Simple touch/pointer reorder: press the handle and move vertically.
-    function enableTouchReorder(list) {
-      list.querySelectorAll(".drag-handle").forEach(handle => {
-        let startIndex = null;
-        let activePointer = null;
-
-        handle.addEventListener("pointerdown", event => {
-          if (event.pointerType === "mouse") return;
-          const row = handle.closest(".rank-row");
-          startIndex = Number(row.dataset.index);
-          activePointer = event.pointerId;
-          handle.setPointerCapture(activePointer);
-          row.classList.add("dragging");
-        });
-
-        handle.addEventListener("pointermove", event => {
-          if (activePointer !== event.pointerId || startIndex === null) return;
-          const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".rank-row");
-          if (!target || target.classList.contains("empty")) return;
-
-          const targetIndex = Number(target.dataset.index);
-          if (targetIndex === startIndex) return;
-
-          const [moved] = ranking.splice(startIndex, 1);
-          ranking.splice(targetIndex, 0, moved);
-          startIndex = targetIndex;
-          render();
-        });
-
-        const finish = event => {
-          if (activePointer !== event.pointerId) return;
-          activePointer = null;
-          startIndex = null;
-          render();
-        };
-
-        handle.addEventListener("pointerup", finish);
-        handle.addEventListener("pointercancel", finish);
-      });
     }
 
     function renderTeams() {
@@ -445,6 +452,65 @@
 
         grid.appendChild(button);
       });
+    }
+
+    function renderPlayers() {
+      const container = document.getElementById("playersList");
+      document.getElementById("playerCountBadge").textContent =
+        `${competitionPlayers.length} player${competitionPlayers.length === 1 ? "" : "s"}`;
+
+      if (!competitionPlayers.length) {
+        container.innerHTML = `<p class="muted">No players yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = competitionPlayers.map(player => `
+        <div class="player-row">
+          <div class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</div>
+          <div class="player-meta">
+            <strong>${escapeHtml(player.player_name)}</strong>
+            <span>${player.is_submitted ? "Prediction submitted" : "Waiting for prediction"}</span>
+          </div>
+          <span class="submission-badge ${player.is_submitted ? "yes" : "no"}">
+            ${player.is_submitted ? "Submitted" : "Not yet"}
+          </span>
+        </div>
+      `).join("");
+    }
+
+    function renderSharedPredictions() {
+      const container = document.getElementById("predictionCards");
+      const submittedPlayers = competitionPlayers.filter(p => p.is_submitted);
+
+      if (!submittedPlayers.length) {
+        container.innerHTML = `<p class="muted">No submitted predictions yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = submittedPlayers.map(player => {
+        const picks = competitionPredictions
+          .filter(p => p.player_id === player.player_id)
+          .sort((a, b) => a.predicted_position - b.predicted_position);
+
+        return `
+          <details class="prediction-card" ${player.player_id === currentPlayer.player_id ? "open" : ""}>
+            <summary>
+              <span class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</span>
+              <span class="summary-name">${escapeHtml(player.player_name)}</span>
+              <span class="submission-badge yes">Submitted</span>
+            </summary>
+            <ol class="shared-ranking">
+              ${picks.map(pick => `
+                <li>
+                  <span class="rank-number">${pick.predicted_position}</span>
+                  <span class="badge">${escapeHtml(pick.short_name || "")}</span>
+                  <strong>${escapeHtml(pick.team_name)}</strong>
+                </li>
+              `).join("")}
+            </ol>
+          </details>
+        `;
+      }).join("");
     }
 
     function moveTeam(index, direction) {
@@ -488,18 +554,25 @@
         if (error) throw error;
 
         setMessage(predictionMessage, "Prediction saved successfully.", true);
-        const pill = document.getElementById("saveStatus");
-        pill.textContent = "Submitted";
-        pill.classList.add("saved");
+        updateSaveStatus();
+        await loadSharedCompetitionData();
         log(data);
       } catch (error) {
-        const msg = error?.message || "Could not save prediction.";
-        setMessage(predictionMessage, msg);
+        setMessage(predictionMessage, error?.message || "Could not save prediction.");
         log(error);
       } finally {
         button.disabled = false;
         button.textContent = "Submit prediction";
       }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.tab === tabId);
+      });
+      document.querySelectorAll(".tab-panel").forEach(panel => {
+        panel.classList.toggle("hidden", panel.id !== tabId);
+      });
     }
 
     function escapeHtml(value) {
@@ -520,6 +593,10 @@
       ranking = [];
       markChanged();
       render();
+    });
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     });
 
     initialise();
