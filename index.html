@@ -2,28 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <main class="shell">
-    <section class="brand">
+    <header class="brand">
       <p class="eyebrow">2026/27 FRIENDS LEAGUE</p>
       <h1>Premier League Halfway Predictor</h1>
       <p>Predict the Top 10 after every club has played 19 league matches.</p>
-    </section>
+    </header>
 
     <section class="card" id="loadingScreen">
-      <h2>Checking your access…</h2>
-      <p class="muted">Connecting securely to the competition.</p>
+      <h2>Loading…</h2>
+      <p class="muted">Checking your competition access.</p>
     </section>
 
     <section class="card hidden" id="competitionScreen">
       <p class="step">STEP 1</p>
       <h2>Enter the competition</h2>
-      <p class="muted">You only need the shared password the first time you use this browser.</p>
+      <p class="muted">Enter the shared password. This browser will remember access.</p>
 
       <label for="competitionPassword">Competition password</label>
       <input id="competitionPassword" type="password" autocomplete="current-password" />
@@ -35,10 +35,7 @@
     <section class="card hidden" id="playerScreen">
       <p class="step">STEP 2</p>
       <h2>Who are you?</h2>
-      <p class="muted">
-        New player? Create your name and PIN. Already joined on another device?
-        Use the same name and PIN to link this device.
-      </p>
+      <p class="muted">Create a player, or link this device to a player you already made.</p>
 
       <label for="playerName">Name</label>
       <input id="playerName" maxlength="30" autocomplete="name" placeholder="e.g. Curtis" />
@@ -48,40 +45,55 @@
              maxlength="6" autocomplete="current-password" placeholder="4–6 digits" />
 
       <div class="button-grid">
-        <button id="createPlayerBtn" type="button">I'm new — create player</button>
-        <button id="linkPlayerBtn" class="secondary" type="button">I already have a player</button>
+        <button id="createPlayerBtn" type="button">I'm new</button>
+        <button id="linkPlayerBtn" class="secondary" type="button">I already joined</button>
       </div>
 
       <p id="playerMessage" class="message" aria-live="polite"></p>
     </section>
 
-    <section class="card hidden" id="successScreen">
-      <div class="success-icon">✓</div>
-      <p class="step">ACCESS READY</p>
-      <h2 id="welcomeTitle">Welcome</h2>
-      <p class="muted">
-        This browser is now linked to your competition player. On future visits you'll be recognised automatically.
-      </p>
-
-      <div class="info-box">
+    <section class="hidden" id="predictorScreen">
+      <div class="dashboard-head">
         <div>
-          <span>Competition</span>
-          <strong>Premier League Halfway Predictor 2026/27</strong>
+          <p class="step">YOUR PREDICTION</p>
+          <h2 id="playerHeading">Top 10</h2>
         </div>
-        <div>
-          <span>Prediction deadline</span>
-          <strong>21 August 2026 · 8:00pm UK</strong>
-        </div>
-        <div>
-          <span>Target</span>
-          <strong>Table after 19 matches per club</strong>
-        </div>
+        <span id="saveStatus" class="status-pill">Not submitted</span>
       </div>
 
-      <button id="continueBtn" type="button">Continue to predictor</button>
-      <p class="tiny muted">
-        Top-10 ranking screen is the next version — this build verifies secure player identity first.
-      </p>
+      <div class="deadline-banner">
+        <span>Locks</span>
+        <strong>21 Aug · 8:00pm UK</strong>
+      </div>
+
+      <section class="card ranking-card">
+        <div class="section-row">
+          <div>
+            <h3>Your Top 10</h3>
+            <p class="muted compact">Add teams, then drag the handle or use ↑ ↓ to reorder.</p>
+          </div>
+          <button id="clearBtn" class="text-button" type="button">Clear</button>
+        </div>
+
+        <ol id="rankingList" class="ranking-list"></ol>
+      </section>
+
+      <section class="card teams-card">
+        <div class="section-row">
+          <div>
+            <h3>Choose teams</h3>
+            <p class="muted compact"><span id="selectedCount">0</span>/10 selected</p>
+          </div>
+        </div>
+        <div id="teamGrid" class="team-grid"></div>
+      </section>
+
+      <section class="card submit-card">
+        <h3>Ready?</h3>
+        <p class="muted compact">You can change and resubmit your prediction until the deadline.</p>
+        <button id="submitPredictionBtn" type="button">Submit prediction</button>
+        <p id="predictionMessage" class="message" aria-live="polite"></p>
+      </section>
     </section>
 
     <details class="debug-panel">
@@ -93,11 +105,10 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
 
-    // IMPORTANT:
-    // Copy the REAL values from your current working GitHub index.html into these two lines.
+    // Replace these two placeholders with the same REAL public values
+    // already used in your working V2 GitHub page.
     const SUPABASE_URL = "https://dzwtabmclyztofbcdhlu.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-2ySWaGGO-Uft-rwBxxbwA_wsqfI-fD";
-
     const COMPETITION_SLUG = "halfway-2026-27";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -106,16 +117,18 @@
       loading: document.getElementById("loadingScreen"),
       competition: document.getElementById("competitionScreen"),
       player: document.getElementById("playerScreen"),
-      success: document.getElementById("successScreen")
+      predictor: document.getElementById("predictorScreen")
     };
 
     const debug = document.getElementById("debug");
-    const competitionPassword = document.getElementById("competitionPassword");
     const competitionMessage = document.getElementById("competitionMessage");
-    const playerName = document.getElementById("playerName");
-    const playerPin = document.getElementById("playerPin");
     const playerMessage = document.getElementById("playerMessage");
-    const welcomeTitle = document.getElementById("welcomeTitle");
+    const predictionMessage = document.getElementById("predictionMessage");
+
+    let teams = [];
+    let ranking = [];
+    let currentPlayer = null;
+    let draggedIndex = null;
 
     function showScreen(name) {
       Object.values(screens).forEach(el => el.classList.add("hidden"));
@@ -123,8 +136,7 @@
     }
 
     function log(value) {
-      debug.textContent =
-        typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      debug.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
     }
 
     function setMessage(el, text, ok = false) {
@@ -135,15 +147,13 @@
     async function ensureSession() {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
+      if (sessionData.session) return;
 
-      if (sessionData.session) return sessionData.session;
-
-      const { data, error } = await supabase.auth.signInAnonymously();
+      const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
-      return data.session;
     }
 
-    async function hasCompetitionMembership() {
+    async function hasMembership() {
       const { data, error } = await supabase
         .from("competition_members")
         .select("competition_id")
@@ -157,72 +167,89 @@
       const { data, error } = await supabase.rpc("get_my_player", {
         p_slug: COMPETITION_SLUG
       });
-
       if (error) throw error;
       return data?.[0] ?? null;
+    }
+
+    async function loadTeams() {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("id,name,short_name")
+        .order("name");
+
+      if (error) throw error;
+      teams = data ?? [];
+    }
+
+    async function loadPrediction() {
+      const { data, error } = await supabase.rpc("get_my_prediction", {
+        p_slug: COMPETITION_SLUG
+      });
+
+      if (error) throw error;
+
+      ranking = (data ?? []).map(row => ({
+        id: row.team_id,
+        name: row.team_name,
+        short_name: row.short_name
+      }));
+
+      if (ranking.length === 10) {
+        document.getElementById("saveStatus").textContent = "Submitted";
+        document.getElementById("saveStatus").classList.add("saved");
+      }
     }
 
     async function initialise() {
       try {
         await ensureSession();
 
-        const member = await hasCompetitionMembership();
-        if (!member) {
+        if (!(await hasMembership())) {
           showScreen("competition");
           return;
         }
 
-        const player = await getMyPlayer();
-        if (!player) {
+        currentPlayer = await getMyPlayer();
+
+        if (!currentPlayer) {
           showScreen("player");
           return;
         }
 
-        showPlayerSuccess(player.player_name);
+        await openPredictor();
       } catch (error) {
         log(error);
         screens.loading.innerHTML = `
           <h2>Connection problem</h2>
-          <p class="message error-text">Could not initialise the app. Open Debug below for details.</p>`;
+          <p class="message error-text">Could not initialise the app. Open Debug below.</p>`;
       }
     }
 
     async function joinCompetition() {
-      competitionMessage.textContent = "";
-      const password = competitionPassword.value;
-
+      const password = document.getElementById("competitionPassword").value;
       if (!password) {
         setMessage(competitionMessage, "Enter the shared competition password.");
         return;
       }
 
-      const button = document.getElementById("joinCompetitionBtn");
-      button.disabled = true;
+      const { data, error } = await supabase.rpc("join_competition", {
+        p_slug: COMPETITION_SLUG,
+        p_password: password
+      });
 
-      try {
-        const { data, error } = await supabase.rpc("join_competition", {
-          p_slug: COMPETITION_SLUG,
-          p_password: password
-        });
-
-        if (error) throw error;
-
-        setMessage(competitionMessage, "Access granted.", true);
-        log(data);
-        competitionPassword.value = "";
-
-        setTimeout(() => showScreen("player"), 350);
-      } catch (error) {
+      if (error) {
         setMessage(competitionMessage, "Incorrect competition password.");
         log(error);
-      } finally {
-        button.disabled = false;
+        return;
       }
+
+      log(data);
+      showScreen("player");
     }
 
-    function validatePlayerInputs() {
-      const name = playerName.value.trim();
-      const pin = playerPin.value.trim();
+    function getPlayerInputs() {
+      const name = document.getElementById("playerName").value.trim();
+      const pin = document.getElementById("playerPin").value.trim();
 
       if (name.length < 2 || name.length > 30) {
         setMessage(playerMessage, "Enter a name between 2 and 30 characters.");
@@ -230,7 +257,7 @@
       }
 
       if (!/^\d{4,6}$/.test(pin)) {
-        setMessage(playerMessage, "Your PIN must be 4–6 digits.");
+        setMessage(playerMessage, "PIN must be 4–6 digits.");
         return null;
       }
 
@@ -238,89 +265,261 @@
     }
 
     async function createPlayer() {
-      const input = validatePlayerInputs();
+      const input = getPlayerInputs();
       if (!input) return;
 
-      const button = document.getElementById("createPlayerBtn");
-      button.disabled = true;
-      playerMessage.textContent = "";
+      const { data, error } = await supabase.rpc("create_player", {
+        p_slug: COMPETITION_SLUG,
+        p_name: input.name,
+        p_pin: input.pin
+      });
 
-      try {
-        const { data, error } = await supabase.rpc("create_player", {
-          p_slug: COMPETITION_SLUG,
-          p_name: input.name,
-          p_pin: input.pin
-        });
-
-        if (error) throw error;
-
-        const player = data?.[0];
-        log(data);
-        playerPin.value = "";
-        showPlayerSuccess(player?.player_name ?? input.name);
-      } catch (error) {
-        const msg = error?.message || "";
-        if (msg.includes("already exists")) {
-          setMessage(playerMessage, "That name already exists. Use “I already have a player” instead.");
-        } else if (msg.includes("locked")) {
-          setMessage(playerMessage, "Predictions are locked.");
-        } else {
-          setMessage(playerMessage, msg || "Could not create player.");
-        }
+      if (error) {
+        setMessage(playerMessage, error.message || "Could not create player.");
         log(error);
-      } finally {
-        button.disabled = false;
+        return;
       }
+
+      currentPlayer = data?.[0] ?? { player_name: input.name };
+      await openPredictor();
     }
 
     async function linkPlayer() {
-      const input = validatePlayerInputs();
+      const input = getPlayerInputs();
       if (!input) return;
 
-      const button = document.getElementById("linkPlayerBtn");
+      const { data, error } = await supabase.rpc("link_player", {
+        p_slug: COMPETITION_SLUG,
+        p_name: input.name,
+        p_pin: input.pin
+      });
+
+      if (error) {
+        setMessage(playerMessage, "Name or PIN is incorrect.");
+        log(error);
+        return;
+      }
+
+      currentPlayer = data?.[0] ?? { player_name: input.name };
+      await openPredictor();
+    }
+
+    async function openPredictor() {
+      await loadTeams();
+      await loadPrediction();
+      document.getElementById("playerHeading").textContent =
+        `${currentPlayer.player_name}'s Top 10`;
+      render();
+      showScreen("predictor");
+    }
+
+    function render() {
+      renderRanking();
+      renderTeams();
+      document.getElementById("selectedCount").textContent = ranking.length;
+    }
+
+    function renderRanking() {
+      const list = document.getElementById("rankingList");
+      list.innerHTML = "";
+
+      for (let i = 0; i < 10; i++) {
+        const team = ranking[i];
+        const li = document.createElement("li");
+
+        if (!team) {
+          li.className = "rank-row empty";
+          li.innerHTML = `
+            <span class="rank-number">${i + 1}</span>
+            <span class="empty-label">Choose a team</span>`;
+          list.appendChild(li);
+          continue;
+        }
+
+        li.className = "rank-row";
+        li.draggable = true;
+        li.dataset.index = String(i);
+
+        li.innerHTML = `
+          <span class="rank-number">${i + 1}</span>
+          <button class="drag-handle" type="button" aria-label="Drag ${escapeHtml(team.name)}">☰</button>
+          <span class="team-name">${escapeHtml(team.name)}</span>
+          <span class="row-actions">
+            <button class="mini-btn up-btn" type="button" aria-label="Move up">↑</button>
+            <button class="mini-btn down-btn" type="button" aria-label="Move down">↓</button>
+            <button class="mini-btn remove-btn" type="button" aria-label="Remove">×</button>
+          </span>`;
+
+        li.querySelector(".up-btn").addEventListener("click", () => moveTeam(i, -1));
+        li.querySelector(".down-btn").addEventListener("click", () => moveTeam(i, 1));
+        li.querySelector(".remove-btn").addEventListener("click", () => removeTeam(i));
+
+        li.addEventListener("dragstart", () => {
+          draggedIndex = i;
+          li.classList.add("dragging");
+        });
+
+        li.addEventListener("dragend", () => {
+          draggedIndex = null;
+          li.classList.remove("dragging");
+        });
+
+        li.addEventListener("dragover", event => event.preventDefault());
+
+        li.addEventListener("drop", event => {
+          event.preventDefault();
+          const targetIndex = Number(li.dataset.index);
+          if (draggedIndex === null || draggedIndex === targetIndex) return;
+          const [moved] = ranking.splice(draggedIndex, 1);
+          ranking.splice(targetIndex, 0, moved);
+          render();
+        });
+
+        list.appendChild(li);
+      }
+
+      enableTouchReorder(list);
+    }
+
+    // Simple touch/pointer reorder: press the handle and move vertically.
+    function enableTouchReorder(list) {
+      list.querySelectorAll(".drag-handle").forEach(handle => {
+        let startIndex = null;
+        let activePointer = null;
+
+        handle.addEventListener("pointerdown", event => {
+          if (event.pointerType === "mouse") return;
+          const row = handle.closest(".rank-row");
+          startIndex = Number(row.dataset.index);
+          activePointer = event.pointerId;
+          handle.setPointerCapture(activePointer);
+          row.classList.add("dragging");
+        });
+
+        handle.addEventListener("pointermove", event => {
+          if (activePointer !== event.pointerId || startIndex === null) return;
+          const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".rank-row");
+          if (!target || target.classList.contains("empty")) return;
+
+          const targetIndex = Number(target.dataset.index);
+          if (targetIndex === startIndex) return;
+
+          const [moved] = ranking.splice(startIndex, 1);
+          ranking.splice(targetIndex, 0, moved);
+          startIndex = targetIndex;
+          render();
+        });
+
+        const finish = event => {
+          if (activePointer !== event.pointerId) return;
+          activePointer = null;
+          startIndex = null;
+          render();
+        };
+
+        handle.addEventListener("pointerup", finish);
+        handle.addEventListener("pointercancel", finish);
+      });
+    }
+
+    function renderTeams() {
+      const grid = document.getElementById("teamGrid");
+      grid.innerHTML = "";
+
+      teams.forEach(team => {
+        const selected = ranking.some(t => t.id === team.id);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "team-choice" + (selected ? " selected" : "");
+        button.disabled = selected || ranking.length >= 10;
+        button.innerHTML = `
+          <span class="badge">${escapeHtml(team.short_name || "")}</span>
+          <span>${escapeHtml(team.name)}</span>`;
+
+        button.addEventListener("click", () => {
+          if (ranking.length >= 10 || selected) return;
+          ranking.push(team);
+          markChanged();
+          render();
+        });
+
+        grid.appendChild(button);
+      });
+    }
+
+    function moveTeam(index, direction) {
+      const target = index + direction;
+      if (target < 0 || target >= ranking.length) return;
+      [ranking[index], ranking[target]] = [ranking[target], ranking[index]];
+      markChanged();
+      render();
+    }
+
+    function removeTeam(index) {
+      ranking.splice(index, 1);
+      markChanged();
+      render();
+    }
+
+    function markChanged() {
+      const pill = document.getElementById("saveStatus");
+      pill.textContent = "Unsaved changes";
+      pill.classList.remove("saved");
+    }
+
+    async function savePrediction() {
+      predictionMessage.textContent = "";
+
+      if (ranking.length !== 10) {
+        setMessage(predictionMessage, "Choose all 10 teams before submitting.");
+        return;
+      }
+
+      const button = document.getElementById("submitPredictionBtn");
       button.disabled = true;
-      playerMessage.textContent = "";
+      button.textContent = "Saving…";
 
       try {
-        const { data, error } = await supabase.rpc("link_player", {
+        const { data, error } = await supabase.rpc("save_my_prediction", {
           p_slug: COMPETITION_SLUG,
-          p_name: input.name,
-          p_pin: input.pin
+          p_team_ids: ranking.map(team => team.id)
         });
 
         if (error) throw error;
 
-        const player = data?.[0];
+        setMessage(predictionMessage, "Prediction saved successfully.", true);
+        const pill = document.getElementById("saveStatus");
+        pill.textContent = "Submitted";
+        pill.classList.add("saved");
         log(data);
-        playerPin.value = "";
-        showPlayerSuccess(player?.player_name ?? input.name);
       } catch (error) {
-        setMessage(playerMessage, "Name or PIN is incorrect.");
+        const msg = error?.message || "Could not save prediction.";
+        setMessage(predictionMessage, msg);
         log(error);
       } finally {
         button.disabled = false;
+        button.textContent = "Submit prediction";
       }
     }
 
-    function showPlayerSuccess(name) {
-      welcomeTitle.textContent = `Welcome, ${name}`;
-      showScreen("success");
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
     }
 
     document.getElementById("joinCompetitionBtn").addEventListener("click", joinCompetition);
     document.getElementById("createPlayerBtn").addEventListener("click", createPlayer);
     document.getElementById("linkPlayerBtn").addEventListener("click", linkPlayer);
-
-    competitionPassword.addEventListener("keydown", e => {
-      if (e.key === "Enter") joinCompetition();
-    });
-
-    playerPin.addEventListener("keydown", e => {
-      if (e.key === "Enter") createPlayer();
-    });
-
-    document.getElementById("continueBtn").addEventListener("click", () => {
-      alert("Player login works. The Top-10 predictor screen is next.");
+    document.getElementById("submitPredictionBtn").addEventListener("click", savePrediction);
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      ranking = [];
+      markChanged();
+      render();
     });
 
     initialise();
