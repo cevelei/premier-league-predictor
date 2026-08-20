@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Premier League Predictor - Connection Test</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <p class="eyebrow">BACKEND CONNECTION TEST</p>
+      <h1>Premier League Predictor</h1>
+      <p class="muted">Tests anonymous authentication, competition password access, RLS, and team loading.</p>
+
+      <div class="status-list">
+        <div><span id="authDot" class="dot pending"></span><span id="authStatus">Creating anonymous session…</span></div>
+        <div><span id="membershipDot" class="dot pending"></span><span id="membershipStatus">Competition not joined yet</span></div>
+        <div><span id="teamsDot" class="dot pending"></span><span id="teamsStatus">Teams not loaded yet</span></div>
+      </div>
+
+      <label for="password">Competition password</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Enter shared password" />
+      <button id="joinBtn" type="button">Join competition</button>
+
+      <p id="message" class="message" aria-live="polite"></p>
+
+      <details>
+        <summary>Debug details</summary>
+        <pre id="debug"></pre>
+      </details>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
+
+    const SUPABASE_URL = "https://xxxxxxxxxxxxx.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_xxxxxxxxxxxxx";
+    const COMPETITION_SLUG = "halfway-2026-27";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    const authDot = document.getElementById("authDot");
+    const membershipDot = document.getElementById("membershipDot");
+    const teamsDot = document.getElementById("teamsDot");
+    const authStatus = document.getElementById("authStatus");
+    const membershipStatus = document.getElementById("membershipStatus");
+    const teamsStatus = document.getElementById("teamsStatus");
+    const message = document.getElementById("message");
+    const debug = document.getElementById("debug");
+    const joinBtn = document.getElementById("joinBtn");
+    const passwordInput = document.getElementById("password");
+
+    function setStatus(dot, textEl, state, text) {
+      dot.className = "dot " + state;
+      textEl.textContent = text;
+    }
+
+    function log(obj) {
+      debug.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+    }
+
+    async function ensureAnonymousSession() {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      if (sessionData.session) {
+        setStatus(authDot, authStatus, "ok", "Anonymous session ready");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+
+      setStatus(authDot, authStatus, "ok", "Anonymous session created");
+      log({ auth_user_id: data.user?.id });
+    }
+
+    async function tryLoadExistingMembership() {
+      const { data, error } = await supabase
+        .from("competition_members")
+        .select("competition_id")
+        .limit(1);
+
+      if (error) return false;
+
+      if (data && data.length > 0) {
+        setStatus(membershipDot, membershipStatus, "ok", "Existing competition access found");
+        return true;
+      }
+
+      return false;
+    }
+
+    async function loadTeams() {
+      const { data, error } = await supabase
+        .from("teams")
+        .select("name, short_name")
+        .order("name");
+
+      if (error) {
+        setStatus(teamsDot, teamsStatus, "bad", "Team load failed");
+        log(error);
+        return;
+      }
+
+      setStatus(teamsDot, teamsStatus, "ok", `${data.length} Premier League teams loaded`);
+      log({ teams: data });
+    }
+
+    async function joinCompetition() {
+      message.textContent = "";
+      joinBtn.disabled = true;
+
+      try {
+        const password = passwordInput.value;
+        if (!password) {
+          message.textContent = "Enter the competition password.";
+          return;
+        }
+
+        const { data, error } = await supabase.rpc("join_competition", {
+          p_slug: COMPETITION_SLUG,
+          p_password: password
+        });
+
+        if (error) {
+          setStatus(membershipDot, membershipStatus, "bad", "Competition access denied");
+          message.textContent = "Incorrect password or access failed.";
+          log(error);
+          return;
+        }
+
+        setStatus(membershipDot, membershipStatus, "ok", "Competition access granted");
+        message.textContent = "Success — this device has joined the competition.";
+        log(data);
+
+        await loadTeams();
+      } finally {
+        joinBtn.disabled = false;
+      }
+    }
+
+    joinBtn.addEventListener("click", joinCompetition);
+    passwordInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") joinCompetition();
+    });
+
+    try {
+      await ensureAnonymousSession();
+      const hasMembership = await tryLoadExistingMembership();
+      if (hasMembership) await loadTeams();
+    } catch (error) {
+      setStatus(authDot, authStatus, "bad", "Anonymous auth failed");
+      message.textContent = "Could not connect to Supabase.";
+      log(error);
+    }
+  </script>
+</body>
+</html>
