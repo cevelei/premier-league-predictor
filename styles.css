@@ -2,14 +2,20 @@
 
 :root {
   --pl: #37003c;
+  --pl-deep: #250029;
   --pl2: #5c1265;
+  --pink: #ff2882;
+  --teal: #00cdb7;
+  --aqua: #04f5ff;
+  --lime: #00ff85;
   --green: #079455;
-  --bg: #f5f2f6;
-  --card: #fff;
-  --text: #1d1720;
-  --muted: #726b76;
-  --border: #e5dfe7;
+  --bg: #f7f3f8;
+  --card: #ffffff;
+  --text: #211724;
+  --muted: #746c77;
+  --border: #e8dfea;
   --danger: #b42318;
+  --shadow: 0 12px 30px rgba(55, 0, 60, .08);
 }
 
 html { -webkit-text-size-adjust: 100%; }
@@ -17,7 +23,7 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: linear-gradient(180deg, #ffffff 0, var(--bg) 260px);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -30,12 +36,64 @@ button, input { font: inherit; }
   padding: 28px 0 60px;
 }
 
-.brand { padding: 12px 4px 22px; }
+.brand {
+  padding: 14px 4px 24px;
+  position: relative;
+}
+
+.league-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.league-mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  border-radius: 14px 14px 14px 5px;
+  background: linear-gradient(135deg, var(--pink), var(--pl));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(255, 40, 130, .22);
+  overflow: hidden;
+}
+
+.league-mark::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  right: -9px;
+  top: -8px;
+  border: 3px solid rgba(4, 245, 255, .72);
+  border-radius: 50%;
+}
+
+.league-mark-ball {
+  position: absolute;
+  left: 8px;
+  top: 6px;
+  color: var(--aqua);
+  font-size: 11px;
+}
+
+.league-mark-text {
+  margin-top: 9px;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: .06em;
+  font-weight: 950;
+}
 
 .brand h1 {
-  margin: 5px 0 10px;
-  font-size: clamp(32px, 8vw, 52px);
-  line-height: 1;
+  margin: 10px 0 10px;
+  max-width: 700px;
+  font-size: clamp(34px, 8vw, 54px);
+  line-height: .98;
+  letter-spacing: -.035em;
+  color: var(--pl);
 }
 
 .brand > p:last-child,
@@ -43,7 +101,7 @@ button, input { font: inherit; }
 
 .eyebrow, .step {
   margin: 0;
-  color: var(--pl2);
+  color: var(--pink);
   font-size: 12px;
   font-weight: 850;
   letter-spacing: .12em;
@@ -171,8 +229,9 @@ button:disabled { opacity: .35; cursor: default; }
 }
 
 .tab.active {
-  background: #f0eaf2;
+  background: linear-gradient(135deg, #f8eaf2, #f0eaf8);
   color: var(--pl);
+  box-shadow: inset 0 -3px 0 var(--pink);
 }
 
 .section-row {
@@ -275,7 +334,10 @@ button:disabled { opacity: .35; cursor: default; }
   text-align: left;
 }
 
-.team-choice.selected { background: #f1edf2; }
+.team-choice.selected {
+  background: linear-gradient(135deg, #fff0f7, #f2eef8);
+  border-color: #efbbd5;
+}
 
 .badge {
   display: grid;
@@ -401,17 +463,17 @@ button:disabled { opacity: .35; cursor: default; }
   .team-grid { grid-template-columns: 1fr; }
 
   .rank-row {
-    grid-template-columns: 32px 32px minmax(0, 1fr) auto;
-    gap: 5px;
-    padding-inline: 6px;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-inline: 8px;
   }
 
   .rank-row.readonly {
     grid-template-columns: 32px 42px minmax(0,1fr);
   }
 
-  .mini-btn { min-width: 30px; width: 30px; }
-  .row-actions { gap: 2px; }
+  .mini-btn { min-width: 42px; width: 42px; min-height: 42px; }
+  .row-actions { gap: 5px; }
 
   .player-row {
     grid-template-columns: 38px minmax(0,1fr);
@@ -618,5 +680,93 @@ button:disabled { opacity: .35; cursor: default; }
 
   .standings-team {
     grid-template-columns: 38px minmax(0,1fr);
+  }
+}
+
+/* V7 football-app polish */
+.deadline-banner {
+  border-left: 5px solid var(--pink);
+  background: linear-gradient(90deg, var(--pl-deep), var(--pl), #5c1265);
+  box-shadow: 0 8px 20px rgba(55, 0, 60, .14);
+}
+
+.card {
+  box-shadow: var(--shadow);
+}
+
+.rank-row:hover {
+  border-color: #d8c7db;
+}
+
+.drag-handle:hover,
+.mini-btn:hover:not(:disabled) {
+  background: #efe1f1;
+}
+
+.remove-btn:hover:not(:disabled) {
+  background: #fff0f3;
+  color: #b42318;
+}
+
+.leader-row:first-child {
+  border-color: #dbc5df;
+}
+
+.leader-row:first-child .leader-position {
+  color: var(--pink);
+}
+
+@media (max-width: 600px), (pointer: coarse) {
+  .drag-handle {
+    display: none !important;
+  }
+
+  .rank-row:not(.readonly) {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    min-height: 60px;
+    gap: 8px;
+    padding: 7px 8px;
+  }
+
+  .rank-row.empty {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .row-actions {
+    gap: 5px;
+  }
+
+  .mini-btn {
+    width: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 11px;
+    font-size: 18px;
+  }
+
+  .rank-number {
+    width: 32px;
+    height: 32px;
+  }
+
+  .team-name {
+    white-space: normal;
+    line-height: 1.15;
+  }
+}
+
+@media (max-width: 430px) {
+  .brand h1 {
+    font-size: 38px;
+  }
+
+  .league-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .mini-btn {
+    width: 40px;
+    min-width: 40px;
   }
 }
