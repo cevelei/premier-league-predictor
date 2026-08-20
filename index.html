@@ -3,159 +3,327 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Premier League Predictor - Connection Test</title>
+  <meta name="theme-color" content="#37003c" />
+  <title>Premier League Predictor</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="wrap">
-    <section class="card">
-      <p class="eyebrow">BACKEND CONNECTION TEST</p>
-      <h1>Premier League Predictor</h1>
-      <p class="muted">Tests anonymous authentication, competition password access, RLS, and team loading.</p>
+  <main class="shell">
+    <section class="brand">
+      <p class="eyebrow">2026/27 FRIENDS LEAGUE</p>
+      <h1>Premier League Halfway Predictor</h1>
+      <p>Predict the Top 10 after every club has played 19 league matches.</p>
+    </section>
 
-      <div class="status-list">
-        <div><span id="authDot" class="dot pending"></span><span id="authStatus">Creating anonymous session…</span></div>
-        <div><span id="membershipDot" class="dot pending"></span><span id="membershipStatus">Competition not joined yet</span></div>
-        <div><span id="teamsDot" class="dot pending"></span><span id="teamsStatus">Teams not loaded yet</span></div>
+    <section class="card" id="loadingScreen">
+      <h2>Checking your access…</h2>
+      <p class="muted">Connecting securely to the competition.</p>
+    </section>
+
+    <section class="card hidden" id="competitionScreen">
+      <p class="step">STEP 1</p>
+      <h2>Enter the competition</h2>
+      <p class="muted">You only need the shared password the first time you use this browser.</p>
+
+      <label for="competitionPassword">Competition password</label>
+      <input id="competitionPassword" type="password" autocomplete="current-password" />
+
+      <button id="joinCompetitionBtn" type="button">Enter competition</button>
+      <p id="competitionMessage" class="message" aria-live="polite"></p>
+    </section>
+
+    <section class="card hidden" id="playerScreen">
+      <p class="step">STEP 2</p>
+      <h2>Who are you?</h2>
+      <p class="muted">
+        New player? Create your name and PIN. Already joined on another device?
+        Use the same name and PIN to link this device.
+      </p>
+
+      <label for="playerName">Name</label>
+      <input id="playerName" maxlength="30" autocomplete="name" placeholder="e.g. Curtis" />
+
+      <label for="playerPin">Personal PIN</label>
+      <input id="playerPin" type="password" inputmode="numeric" pattern="[0-9]*"
+             maxlength="6" autocomplete="current-password" placeholder="4–6 digits" />
+
+      <div class="button-grid">
+        <button id="createPlayerBtn" type="button">I'm new — create player</button>
+        <button id="linkPlayerBtn" class="secondary" type="button">I already have a player</button>
       </div>
 
-      <label for="password">Competition password</label>
-      <input id="password" type="password" autocomplete="current-password" placeholder="Enter shared password" />
-      <button id="joinBtn" type="button">Join competition</button>
-
-      <p id="message" class="message" aria-live="polite"></p>
-
-      <details>
-        <summary>Debug details</summary>
-        <pre id="debug"></pre>
-      </details>
+      <p id="playerMessage" class="message" aria-live="polite"></p>
     </section>
+
+    <section class="card hidden" id="successScreen">
+      <div class="success-icon">✓</div>
+      <p class="step">ACCESS READY</p>
+      <h2 id="welcomeTitle">Welcome</h2>
+      <p class="muted">
+        This browser is now linked to your competition player. On future visits you'll be recognised automatically.
+      </p>
+
+      <div class="info-box">
+        <div>
+          <span>Competition</span>
+          <strong>Premier League Halfway Predictor 2026/27</strong>
+        </div>
+        <div>
+          <span>Prediction deadline</span>
+          <strong>21 August 2026 · 8:00pm UK</strong>
+        </div>
+        <div>
+          <span>Target</span>
+          <strong>Table after 19 matches per club</strong>
+        </div>
+      </div>
+
+      <button id="continueBtn" type="button">Continue to predictor</button>
+      <p class="tiny muted">
+        Top-10 ranking screen is the next version — this build verifies secure player identity first.
+      </p>
+    </section>
+
+    <details class="debug-panel">
+      <summary>Debug</summary>
+      <pre id="debug"></pre>
+    </details>
   </main>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
 
+    // IMPORTANT:
+    // Copy the REAL values from your current working GitHub index.html into these two lines.
     const SUPABASE_URL = "https://dzwtabmclyztofbcdhlu.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-2ySWaGGO-Uft-rwBxxbwA_wsqfI-fD";
+
     const COMPETITION_SLUG = "halfway-2026-27";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-    const authDot = document.getElementById("authDot");
-    const membershipDot = document.getElementById("membershipDot");
-    const teamsDot = document.getElementById("teamsDot");
-    const authStatus = document.getElementById("authStatus");
-    const membershipStatus = document.getElementById("membershipStatus");
-    const teamsStatus = document.getElementById("teamsStatus");
-    const message = document.getElementById("message");
+    const screens = {
+      loading: document.getElementById("loadingScreen"),
+      competition: document.getElementById("competitionScreen"),
+      player: document.getElementById("playerScreen"),
+      success: document.getElementById("successScreen")
+    };
+
     const debug = document.getElementById("debug");
-    const joinBtn = document.getElementById("joinBtn");
-    const passwordInput = document.getElementById("password");
+    const competitionPassword = document.getElementById("competitionPassword");
+    const competitionMessage = document.getElementById("competitionMessage");
+    const playerName = document.getElementById("playerName");
+    const playerPin = document.getElementById("playerPin");
+    const playerMessage = document.getElementById("playerMessage");
+    const welcomeTitle = document.getElementById("welcomeTitle");
 
-    function setStatus(dot, textEl, state, text) {
-      dot.className = "dot " + state;
-      textEl.textContent = text;
+    function showScreen(name) {
+      Object.values(screens).forEach(el => el.classList.add("hidden"));
+      screens[name].classList.remove("hidden");
     }
 
-    function log(obj) {
-      debug.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+    function log(value) {
+      debug.textContent =
+        typeof value === "string" ? value : JSON.stringify(value, null, 2);
     }
 
-    async function ensureAnonymousSession() {
+    function setMessage(el, text, ok = false) {
+      el.textContent = text;
+      el.className = "message " + (ok ? "ok-text" : "error-text");
+    }
+
+    async function ensureSession() {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
 
-      if (sessionData.session) {
-        setStatus(authDot, authStatus, "ok", "Anonymous session ready");
-        return;
-      }
+      if (sessionData.session) return sessionData.session;
 
       const { data, error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
-
-      setStatus(authDot, authStatus, "ok", "Anonymous session created");
-      log({ auth_user_id: data.user?.id });
+      return data.session;
     }
 
-    async function tryLoadExistingMembership() {
+    async function hasCompetitionMembership() {
       const { data, error } = await supabase
         .from("competition_members")
         .select("competition_id")
         .limit(1);
 
-      if (error) return false;
-
-      if (data && data.length > 0) {
-        setStatus(membershipDot, membershipStatus, "ok", "Existing competition access found");
-        return true;
-      }
-
-      return false;
+      if (error) throw error;
+      return Boolean(data?.length);
     }
 
-    async function loadTeams() {
-      const { data, error } = await supabase
-        .from("teams")
-        .select("name, short_name")
-        .order("name");
+    async function getMyPlayer() {
+      const { data, error } = await supabase.rpc("get_my_player", {
+        p_slug: COMPETITION_SLUG
+      });
 
-      if (error) {
-        setStatus(teamsDot, teamsStatus, "bad", "Team load failed");
-        log(error);
-        return;
-      }
-
-      setStatus(teamsDot, teamsStatus, "ok", `${data.length} Premier League teams loaded`);
-      log({ teams: data });
+      if (error) throw error;
+      return data?.[0] ?? null;
     }
 
-    async function joinCompetition() {
-      message.textContent = "";
-      joinBtn.disabled = true;
-
+    async function initialise() {
       try {
-        const password = passwordInput.value;
-        if (!password) {
-          message.textContent = "Enter the competition password.";
+        await ensureSession();
+
+        const member = await hasCompetitionMembership();
+        if (!member) {
+          showScreen("competition");
           return;
         }
 
+        const player = await getMyPlayer();
+        if (!player) {
+          showScreen("player");
+          return;
+        }
+
+        showPlayerSuccess(player.player_name);
+      } catch (error) {
+        log(error);
+        screens.loading.innerHTML = `
+          <h2>Connection problem</h2>
+          <p class="message error-text">Could not initialise the app. Open Debug below for details.</p>`;
+      }
+    }
+
+    async function joinCompetition() {
+      competitionMessage.textContent = "";
+      const password = competitionPassword.value;
+
+      if (!password) {
+        setMessage(competitionMessage, "Enter the shared competition password.");
+        return;
+      }
+
+      const button = document.getElementById("joinCompetitionBtn");
+      button.disabled = true;
+
+      try {
         const { data, error } = await supabase.rpc("join_competition", {
           p_slug: COMPETITION_SLUG,
           p_password: password
         });
 
-        if (error) {
-          setStatus(membershipDot, membershipStatus, "bad", "Competition access denied");
-          message.textContent = "Incorrect password or access failed.";
-          log(error);
-          return;
-        }
+        if (error) throw error;
 
-        setStatus(membershipDot, membershipStatus, "ok", "Competition access granted");
-        message.textContent = "Success — this device has joined the competition.";
+        setMessage(competitionMessage, "Access granted.", true);
         log(data);
+        competitionPassword.value = "";
 
-        await loadTeams();
+        setTimeout(() => showScreen("player"), 350);
+      } catch (error) {
+        setMessage(competitionMessage, "Incorrect competition password.");
+        log(error);
       } finally {
-        joinBtn.disabled = false;
+        button.disabled = false;
       }
     }
 
-    joinBtn.addEventListener("click", joinCompetition);
-    passwordInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") joinCompetition();
+    function validatePlayerInputs() {
+      const name = playerName.value.trim();
+      const pin = playerPin.value.trim();
+
+      if (name.length < 2 || name.length > 30) {
+        setMessage(playerMessage, "Enter a name between 2 and 30 characters.");
+        return null;
+      }
+
+      if (!/^\d{4,6}$/.test(pin)) {
+        setMessage(playerMessage, "Your PIN must be 4–6 digits.");
+        return null;
+      }
+
+      return { name, pin };
+    }
+
+    async function createPlayer() {
+      const input = validatePlayerInputs();
+      if (!input) return;
+
+      const button = document.getElementById("createPlayerBtn");
+      button.disabled = true;
+      playerMessage.textContent = "";
+
+      try {
+        const { data, error } = await supabase.rpc("create_player", {
+          p_slug: COMPETITION_SLUG,
+          p_name: input.name,
+          p_pin: input.pin
+        });
+
+        if (error) throw error;
+
+        const player = data?.[0];
+        log(data);
+        playerPin.value = "";
+        showPlayerSuccess(player?.player_name ?? input.name);
+      } catch (error) {
+        const msg = error?.message || "";
+        if (msg.includes("already exists")) {
+          setMessage(playerMessage, "That name already exists. Use “I already have a player” instead.");
+        } else if (msg.includes("locked")) {
+          setMessage(playerMessage, "Predictions are locked.");
+        } else {
+          setMessage(playerMessage, msg || "Could not create player.");
+        }
+        log(error);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function linkPlayer() {
+      const input = validatePlayerInputs();
+      if (!input) return;
+
+      const button = document.getElementById("linkPlayerBtn");
+      button.disabled = true;
+      playerMessage.textContent = "";
+
+      try {
+        const { data, error } = await supabase.rpc("link_player", {
+          p_slug: COMPETITION_SLUG,
+          p_name: input.name,
+          p_pin: input.pin
+        });
+
+        if (error) throw error;
+
+        const player = data?.[0];
+        log(data);
+        playerPin.value = "";
+        showPlayerSuccess(player?.player_name ?? input.name);
+      } catch (error) {
+        setMessage(playerMessage, "Name or PIN is incorrect.");
+        log(error);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function showPlayerSuccess(name) {
+      welcomeTitle.textContent = `Welcome, ${name}`;
+      showScreen("success");
+    }
+
+    document.getElementById("joinCompetitionBtn").addEventListener("click", joinCompetition);
+    document.getElementById("createPlayerBtn").addEventListener("click", createPlayer);
+    document.getElementById("linkPlayerBtn").addEventListener("click", linkPlayer);
+
+    competitionPassword.addEventListener("keydown", e => {
+      if (e.key === "Enter") joinCompetition();
     });
 
-    try {
-      await ensureAnonymousSession();
-      const hasMembership = await tryLoadExistingMembership();
-      if (hasMembership) await loadTeams();
-    } catch (error) {
-      setStatus(authDot, authStatus, "bad", "Anonymous auth failed");
-      message.textContent = "Could not connect to Supabase.";
-      log(error);
-    }
+    playerPin.addEventListener("keydown", e => {
+      if (e.key === "Enter") createPlayer();
+    });
+
+    document.getElementById("continueBtn").addEventListener("click", () => {
+      alert("Player login works. The Top-10 predictor screen is next.");
+    });
+
+    initialise();
   </script>
 </body>
 </html>
