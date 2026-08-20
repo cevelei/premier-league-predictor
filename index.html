@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
-  <link rel="stylesheet" href="styles.css?v=4.0" />
+  <link rel="stylesheet" href="styles.css?v=5.0" />
 </head>
 <body>
   <main class="shell">
@@ -60,8 +60,8 @@
       </div>
 
       <div class="deadline-banner">
-        <span>Locks</span>
-        <strong>21 Aug · 8:00pm UK</strong>
+        <span id="deadlineLabel">Locks</span>
+        <strong id="deadlineText">21 Aug · 8:00pm UK</strong>
       </div>
 
       <nav class="tabs" aria-label="Competition sections">
@@ -75,14 +75,14 @@
           <div class="section-row">
             <div>
               <h3>Your Top 10</h3>
-              <p class="muted compact">Add teams, then drag the handle or use ↑ ↓ to reorder.</p>
+              <p id="predictionHelp" class="muted compact">Add teams, then drag the handle or use ↑ ↓ to reorder.</p>
             </div>
             <button id="clearBtn" class="text-button" type="button">Clear</button>
           </div>
           <ol id="rankingList" class="ranking-list"></ol>
         </section>
 
-        <section class="card teams-card">
+        <section class="card teams-card" id="teamsCard">
           <div class="section-row">
             <div>
               <h3>Choose teams</h3>
@@ -92,7 +92,7 @@
           <div id="teamGrid" class="team-grid"></div>
         </section>
 
-        <section class="card submit-card">
+        <section class="card submit-card" id="submitCard">
           <h3>Ready?</h3>
           <p class="muted compact">You can change and resubmit your prediction until the deadline.</p>
           <button id="submitPredictionBtn" type="button">Submit prediction</button>
@@ -118,18 +118,20 @@
           <div class="section-row">
             <div>
               <h3>Everyone's predictions</h3>
-              <p class="muted compact">Open a player to see their submitted Top 10.</p>
+              <p id="predictionsIntro" class="muted compact">Predictions unlock after the deadline.</p>
             </div>
           </div>
-          <div id="predictionCards" class="prediction-cards"></div>
+
+          <div id="predictionsLocked" class="locked-panel">
+            <div class="lock-icon">🔒</div>
+            <h3>Predictions are hidden</h3>
+            <p class="muted">You’ll be able to see everyone’s Top 10 after the prediction deadline.</p>
+          </div>
+
+          <div id="predictionCards" class="prediction-cards hidden"></div>
         </section>
       </section>
     </section>
-
-    <details class="debug-panel">
-      <summary>Debug</summary>
-      <pre id="debug"></pre>
-    </details>
   </main>
 
   <script type="module">
@@ -148,7 +150,6 @@
       app: document.getElementById("appScreen")
     };
 
-    const debug = document.getElementById("debug");
     const competitionMessage = document.getElementById("competitionMessage");
     const playerMessage = document.getElementById("playerMessage");
     const predictionMessage = document.getElementById("predictionMessage");
@@ -156,17 +157,14 @@
     let teams = [];
     let ranking = [];
     let currentPlayer = null;
-    let draggedIndex = null;
     let competitionPlayers = [];
     let competitionPredictions = [];
+    let competitionState = null;
+    let draggedIndex = null;
 
     function showScreen(name) {
       Object.values(screens).forEach(el => el.classList.add("hidden"));
       screens[name].classList.remove("hidden");
-    }
-
-    function log(value) {
-      debug.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
     }
 
     function setMessage(el, text, ok = false) {
@@ -178,6 +176,7 @@
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       if (sessionData.session) return;
+
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
     }
@@ -187,6 +186,7 @@
         .from("competition_members")
         .select("competition_id")
         .limit(1);
+
       if (error) throw error;
       return Boolean(data?.length);
     }
@@ -197,6 +197,14 @@
       });
       if (error) throw error;
       return data?.[0] ?? null;
+    }
+
+    async function loadCompetitionState() {
+      const { data, error } = await supabase.rpc("get_competition_state", {
+        p_slug: COMPETITION_SLUG
+      });
+      if (error) throw error;
+      competitionState = data?.[0] ?? null;
     }
 
     async function loadTeams() {
@@ -219,21 +227,25 @@
         name: row.team_name,
         short_name: row.short_name
       }));
-
-      updateSaveStatus();
     }
 
     async function loadSharedCompetitionData() {
-      const [playersResult, predictionsResult] = await Promise.all([
-        supabase.rpc("get_competition_players", { p_slug: COMPETITION_SLUG }),
-        supabase.rpc("get_competition_predictions", { p_slug: COMPETITION_SLUG })
-      ]);
+      const playersResult = await supabase.rpc("get_competition_players", {
+        p_slug: COMPETITION_SLUG
+      });
 
       if (playersResult.error) throw playersResult.error;
-      if (predictionsResult.error) throw predictionsResult.error;
-
       competitionPlayers = playersResult.data ?? [];
-      competitionPredictions = predictionsResult.data ?? [];
+
+      competitionPredictions = [];
+
+      if (competitionState?.predictions_visible) {
+        const predictionsResult = await supabase.rpc("get_competition_predictions", {
+          p_slug: COMPETITION_SLUG
+        });
+        if (predictionsResult.error) throw predictionsResult.error;
+        competitionPredictions = predictionsResult.data ?? [];
+      }
 
       renderPlayers();
       renderSharedPredictions();
@@ -257,10 +269,9 @@
 
         await openApp();
       } catch (error) {
-        log(error);
         screens.loading.innerHTML = `
           <h2>Connection problem</h2>
-          <p class="message error-text">Could not initialise the app. Open Debug below.</p>`;
+          <p class="message error-text">${escapeHtml(error?.message || "Could not initialise the app.")}</p>`;
       }
     }
 
@@ -271,18 +282,16 @@
         return;
       }
 
-      const { data, error } = await supabase.rpc("join_competition", {
+      const { error } = await supabase.rpc("join_competition", {
         p_slug: COMPETITION_SLUG,
         p_password: password
       });
 
       if (error) {
         setMessage(competitionMessage, "Incorrect competition password.");
-        log(error);
         return;
       }
 
-      log(data);
       showScreen("player");
     }
 
@@ -315,7 +324,6 @@
 
       if (error) {
         setMessage(playerMessage, error.message || "Could not create player.");
-        log(error);
         return;
       }
 
@@ -335,7 +343,6 @@
 
       if (error) {
         setMessage(playerMessage, "Name or PIN is incorrect.");
-        log(error);
         return;
       }
 
@@ -344,20 +351,50 @@
     }
 
     async function openApp() {
-      await Promise.all([loadTeams(), loadPrediction(), loadSharedCompetitionData()]);
+      await loadCompetitionState();
+      await Promise.all([loadTeams(), loadPrediction()]);
+      await loadSharedCompetitionData();
+
       document.getElementById("playerHeading").textContent =
         `${currentPlayer.player_name}'s dashboard`;
+
+      applyCompetitionState();
       render();
       showScreen("app");
     }
 
+    function applyCompetitionState() {
+      const locked = Boolean(competitionState?.is_locked);
+      const visible = Boolean(competitionState?.predictions_visible);
+
+      const deadlineLabel = document.getElementById("deadlineLabel");
+      deadlineLabel.textContent = locked ? "Locked" : "Locks";
+
+      document.getElementById("teamsCard").classList.toggle("hidden", locked);
+      document.getElementById("submitCard").classList.toggle("hidden", locked);
+      document.getElementById("clearBtn").classList.toggle("hidden", locked);
+
+      document.getElementById("predictionHelp").textContent = locked
+        ? "Your prediction is locked and can no longer be changed."
+        : "Add teams, then drag the handle or use ↑ ↓ to reorder.";
+
+      document.getElementById("predictionsLocked").classList.toggle("hidden", visible);
+      document.getElementById("predictionCards").classList.toggle("hidden", !visible);
+      document.getElementById("predictionsIntro").textContent = visible
+        ? "Open a player to see their submitted Top 10."
+        : "Predictions unlock after the deadline.";
+
+      updateSaveStatus();
+    }
+
     function updateSaveStatus() {
       const pill = document.getElementById("saveStatus");
+
       if (ranking.length === 10) {
-        pill.textContent = "Submitted";
+        pill.textContent = competitionState?.is_locked ? "Locked" : "Submitted";
         pill.classList.add("saved");
       } else {
-        pill.textContent = "Not submitted";
+        pill.textContent = competitionState?.is_locked ? "Locked" : "Not submitted";
         pill.classList.remove("saved");
       }
     }
@@ -372,6 +409,8 @@
       const list = document.getElementById("rankingList");
       list.innerHTML = "";
 
+      const locked = Boolean(competitionState?.is_locked);
+
       for (let i = 0; i < 10; i++) {
         const team = ranking[i];
         const li = document.createElement("li");
@@ -380,14 +419,23 @@
           li.className = "rank-row empty";
           li.innerHTML = `
             <span class="rank-number">${i + 1}</span>
-            <span class="empty-label">Choose a team</span>`;
+            <span class="empty-label">${locked ? "No team selected" : "Choose a team"}</span>`;
           list.appendChild(li);
           continue;
         }
 
-        li.className = "rank-row";
-        li.draggable = true;
+        li.className = "rank-row" + (locked ? " readonly" : "");
         li.dataset.index = String(i);
+        li.draggable = !locked;
+
+        if (locked) {
+          li.innerHTML = `
+            <span class="rank-number">${i + 1}</span>
+            <span class="badge">${escapeHtml(team.short_name || "")}</span>
+            <span class="team-name">${escapeHtml(team.name)}</span>`;
+          list.appendChild(li);
+          continue;
+        }
 
         li.innerHTML = `
           <span class="rank-number">${i + 1}</span>
@@ -433,6 +481,8 @@
       const grid = document.getElementById("teamGrid");
       grid.innerHTML = "";
 
+      if (competitionState?.is_locked) return;
+
       teams.forEach(team => {
         const selected = ranking.some(t => t.id === team.id);
         const button = document.createElement("button");
@@ -456,6 +506,7 @@
 
     function renderPlayers() {
       const container = document.getElementById("playersList");
+
       document.getElementById("playerCountBadge").textContent =
         `${competitionPlayers.length} player${competitionPlayers.length === 1 ? "" : "s"}`;
 
@@ -480,10 +531,16 @@
 
     function renderSharedPredictions() {
       const container = document.getElementById("predictionCards");
+
+      if (!competitionState?.predictions_visible) {
+        container.innerHTML = "";
+        return;
+      }
+
       const submittedPlayers = competitionPlayers.filter(p => p.is_submitted);
 
       if (!submittedPlayers.length) {
-        container.innerHTML = `<p class="muted">No submitted predictions yet.</p>`;
+        container.innerHTML = `<p class="muted">No submitted predictions.</p>`;
         return;
       }
 
@@ -493,7 +550,7 @@
           .sort((a, b) => a.predicted_position - b.predicted_position);
 
         return `
-          <details class="prediction-card" ${player.player_id === currentPlayer.player_id ? "open" : ""}>
+          <details class="prediction-card">
             <summary>
               <span class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</span>
               <span class="summary-name">${escapeHtml(player.player_name)}</span>
@@ -508,12 +565,12 @@
                 </li>
               `).join("")}
             </ol>
-          </details>
-        `;
+          </details>`;
       }).join("");
     }
 
     function moveTeam(index, direction) {
+      if (competitionState?.is_locked) return;
       const target = index + direction;
       if (target < 0 || target >= ranking.length) return;
       [ranking[index], ranking[target]] = [ranking[target], ranking[index]];
@@ -522,12 +579,14 @@
     }
 
     function removeTeam(index) {
+      if (competitionState?.is_locked) return;
       ranking.splice(index, 1);
       markChanged();
       render();
     }
 
     function markChanged() {
+      if (competitionState?.is_locked) return;
       const pill = document.getElementById("saveStatus");
       pill.textContent = "Unsaved changes";
       pill.classList.remove("saved");
@@ -535,6 +594,11 @@
 
     async function savePrediction() {
       predictionMessage.textContent = "";
+
+      if (competitionState?.is_locked) {
+        setMessage(predictionMessage, "Predictions are locked.");
+        return;
+      }
 
       if (ranking.length !== 10) {
         setMessage(predictionMessage, "Choose all 10 teams before submitting.");
@@ -546,7 +610,7 @@
       button.textContent = "Saving…";
 
       try {
-        const { data, error } = await supabase.rpc("save_my_prediction", {
+        const { error } = await supabase.rpc("save_my_prediction", {
           p_slug: COMPETITION_SLUG,
           p_team_ids: ranking.map(team => team.id)
         });
@@ -556,10 +620,8 @@
         setMessage(predictionMessage, "Prediction saved successfully.", true);
         updateSaveStatus();
         await loadSharedCompetitionData();
-        log(data);
       } catch (error) {
         setMessage(predictionMessage, error?.message || "Could not save prediction.");
-        log(error);
       } finally {
         button.disabled = false;
         button.textContent = "Submit prediction";
@@ -570,6 +632,7 @@
       document.querySelectorAll(".tab").forEach(tab => {
         tab.classList.toggle("active", tab.dataset.tab === tabId);
       });
+
       document.querySelectorAll(".tab-panel").forEach(panel => {
         panel.classList.toggle("hidden", panel.id !== tabId);
       });
@@ -589,7 +652,9 @@
     document.getElementById("createPlayerBtn").addEventListener("click", createPlayer);
     document.getElementById("linkPlayerBtn").addEventListener("click", linkPlayer);
     document.getElementById("submitPredictionBtn").addEventListener("click", savePrediction);
+
     document.getElementById("clearBtn").addEventListener("click", () => {
+      if (competitionState?.is_locked) return;
       ranking = [];
       markChanged();
       render();
