@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
-  <link rel="stylesheet" href="styles.css?v=6.2" />
+  <link rel="stylesheet" href="styles.css?v=7.0" />
   <style>
     .rank-row.empty.drop-target {
       border-color: #5c1265;
@@ -29,7 +29,13 @@
 <body>
   <main class="shell">
     <header class="brand">
-      <p class="eyebrow">2026/27 FRIENDS LEAGUE</p>
+      <div class="league-kicker">
+        <span class="league-mark" aria-hidden="true">
+          <span class="league-mark-ball">●</span>
+          <span class="league-mark-text">PLP</span>
+        </span>
+        <p class="eyebrow">2026/27 LEAGUE</p>
+      </div>
       <h1>Premier League Halfway Predictor</h1>
       <p>Predict the Top 10 after every club has played 19 league matches.</p>
     </header>
@@ -218,6 +224,24 @@
     let liveStandings = [];
     let predictorLeaderboard = [];
     let playerBreakdown = [];
+
+    function isMobileRankingLayout() {
+      return window.matchMedia("(max-width: 600px), (pointer: coarse)").matches;
+    }
+
+    function updatePredictionHelpText() {
+      const help = document.getElementById("predictionHelp");
+      if (!help) return;
+
+      if (competitionState?.is_locked) {
+        help.textContent = "Your prediction is locked and can no longer be changed.";
+        return;
+      }
+
+      help.textContent = isMobileRankingLayout()
+        ? "Use ↑ ↓ to move teams into position."
+        : "Drag teams or use ↑ ↓ to reorder.";
+    }
 
     function showScreen(name) {
       Object.values(screens).forEach(el => el.classList.add("hidden"));
@@ -470,9 +494,7 @@
       document.getElementById("submitCard").classList.toggle("hidden", locked);
       document.getElementById("clearBtn").classList.toggle("hidden", locked);
 
-      document.getElementById("predictionHelp").textContent = locked
-        ? "Your prediction is locked and can no longer be changed."
-        : "Add teams, then drag the handle or use ↑ ↓ to reorder.";
+      updatePredictionHelpText();
 
       document.getElementById("predictionsLocked").classList.toggle("hidden", visible);
       document.getElementById("predictionCards").classList.toggle("hidden", !visible);
@@ -527,7 +549,7 @@
             <span class="rank-number">${i + 1}</span>
             <span class="empty-label">${locked ? "No team selected" : "Choose a team"}</span>`;
 
-          if (!locked) {
+          if (!locked && !isMobileRankingLayout()) {
             li.addEventListener("dragover", event => {
               event.preventDefault();
               li.classList.add("drop-target");
@@ -558,9 +580,15 @@
           continue;
         }
 
-        li.className = "rank-row" + (locked ? " readonly" : "");
+        const mobileRanking = isMobileRankingLayout();
+
+        li.className =
+          "rank-row" +
+          (locked ? " readonly" : "") +
+          (mobileRanking && !locked ? " mobile-controls" : "");
+
         li.dataset.index = String(i);
-        li.draggable = !locked;
+        li.draggable = !locked && !mobileRanking;
 
         if (locked) {
           li.innerHTML = `
@@ -573,7 +601,9 @@
 
         li.innerHTML = `
           <span class="rank-number">${i + 1}</span>
-          <button class="drag-handle" type="button" aria-label="Drag ${escapeHtml(team.name)}">☰</button>
+          ${mobileRanking
+            ? ""
+            : `<button class="drag-handle" type="button" aria-label="Drag ${escapeHtml(team.name)}">☰</button>`}
           <span class="team-name">${escapeHtml(team.name)}</span>
           <span class="row-actions">
             <button class="mini-btn up-btn" type="button" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
@@ -585,27 +615,29 @@
         li.querySelector(".down-btn").addEventListener("click", () => moveTeam(i, 1));
         li.querySelector(".remove-btn").addEventListener("click", () => removeTeam(i));
 
-        li.addEventListener("dragstart", () => {
-          draggedIndex = i;
-          li.classList.add("dragging");
-        });
+        if (!mobileRanking) {
+          li.addEventListener("dragstart", () => {
+            draggedIndex = i;
+            li.classList.add("dragging");
+          });
 
-        li.addEventListener("dragend", () => {
-          draggedIndex = null;
-          li.classList.remove("dragging");
-        });
+          li.addEventListener("dragend", () => {
+            draggedIndex = null;
+            li.classList.remove("dragging");
+          });
 
-        li.addEventListener("dragover", event => event.preventDefault());
+          li.addEventListener("dragover", event => event.preventDefault());
 
-        li.addEventListener("drop", event => {
-          event.preventDefault();
-          const targetIndex = Number(li.dataset.index);
-          if (draggedIndex === null || draggedIndex === targetIndex) return;
-          [ranking[draggedIndex], ranking[targetIndex]] =
-            [ranking[targetIndex], ranking[draggedIndex]];
-          markChanged();
-          render();
-        });
+          li.addEventListener("drop", event => {
+            event.preventDefault();
+            const targetIndex = Number(li.dataset.index);
+            if (draggedIndex === null || draggedIndex === targetIndex) return;
+            [ranking[draggedIndex], ranking[targetIndex]] =
+              [ranking[targetIndex], ranking[draggedIndex]];
+            markChanged();
+            render();
+          });
+        }
 
         list.appendChild(li);
       }
@@ -896,6 +928,14 @@
 
     document.querySelectorAll(".tab").forEach(tab => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
+
+    window.addEventListener("resize", () => {
+      updatePredictionHelpText();
+
+      if (!document.getElementById("appScreen").classList.contains("hidden")) {
+        renderRanking();
+      }
     });
 
     initialise();
