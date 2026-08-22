@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#37003c" />
   <title>Premier League Predictor</title>
   <link rel="stylesheet" href="styles.css?v=7.1" />
+
   <style>
     .rank-row.empty.drop-target {
       border-color: #5c1265;
@@ -13,6 +14,7 @@
       box-shadow: inset 0 0 0 1px #5c1265;
     }
   </style>
+
   <style>
     .deadline-banner > span,
     .deadline-banner > strong {
@@ -26,950 +28,3085 @@
     }
   </style>
 </head>
+
 <body>
+
   <main class="shell">
+
     <header class="brand">
       <div class="league-kicker">
         <span class="league-mark" aria-hidden="true">
           <span class="league-mark-ball">●</span>
           <span class="league-mark-text">PLP</span>
         </span>
+
         <p class="eyebrow">2026/27 LEAGUE</p>
       </div>
+
       <h1>Premier League Halfway Predictor</h1>
-      <p>Predict the Top 10 after every club has played 19 league matches.</p>
+
+      <p>
+        Predict the Top 10 after every club has played 19 league matches.
+      </p>
     </header>
+
+
+    <!-- ======================================================
+         LOADING
+         ====================================================== -->
 
     <section class="card" id="loadingScreen">
       <h2>Loading…</h2>
-      <p class="muted">Checking your competition access.</p>
+      <p class="muted">
+        Checking your competition access.
+      </p>
     </section>
+
+
+    <!-- ======================================================
+         STEP 1 - COMPETITION
+         ====================================================== -->
 
     <section class="card hidden" id="competitionScreen">
-      <p class="step">STEP 1</p>
-      <h2>Enter the competition</h2>
-      <p class="muted">Enter the shared password. This browser will remember access.</p>
 
-      <label for="competitionPassword">Competition password</label>
-      <input id="competitionPassword" type="password" autocomplete="current-password" />
-      <button id="joinCompetitionBtn" type="button">Enter competition</button>
-      <p id="competitionMessage" class="message" aria-live="polite"></p>
+      <p class="step">STEP 1</p>
+
+      <h2>Enter the competition</h2>
+
+      <p class="muted">
+        Enter the shared password. This browser will remember access.
+      </p>
+
+      <label for="competitionPassword">
+        Competition password
+      </label>
+
+      <input
+        id="competitionPassword"
+        type="password"
+        autocomplete="current-password"
+      />
+
+      <button
+        id="joinCompetitionBtn"
+        type="button"
+      >
+        Enter competition
+      </button>
+
+      <p
+        id="competitionMessage"
+        class="message"
+        aria-live="polite"
+      ></p>
+
     </section>
+
+
+    <!-- ======================================================
+         STEP 2 - PLAYER
+         ====================================================== -->
 
     <section class="card hidden" id="playerScreen">
+
       <p class="step">STEP 2</p>
+
       <h2>Who are you?</h2>
-      <p class="muted">Create a player, or link this device to a player you already made.</p>
 
-      <label for="playerName">Name</label>
-      <input id="playerName" maxlength="30" autocomplete="name" placeholder="e.g. Curtis" />
+      <p class="muted">
+        Create a player, or link this device to a player you already made.
+      </p>
 
-      <label for="playerPin">Personal PIN</label>
-      <input id="playerPin" type="password" inputmode="numeric" pattern="[0-9]*"
-             maxlength="6" autocomplete="current-password" placeholder="4–6 digits" />
+      <label for="playerName">
+        Name
+      </label>
+
+      <input
+        id="playerName"
+        maxlength="30"
+        autocomplete="name"
+        placeholder="e.g. Curtis"
+      />
+
+      <label for="playerPin">
+        Personal PIN
+      </label>
+
+      <input
+        id="playerPin"
+        type="password"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="6"
+        autocomplete="current-password"
+        placeholder="4–6 digits"
+      />
 
       <div class="button-grid">
-        <button id="createPlayerBtn" type="button">I'm new</button>
-        <button id="linkPlayerBtn" class="secondary" type="button">I already joined</button>
+
+        <button
+          id="createPlayerBtn"
+          type="button"
+        >
+          I'm new
+        </button>
+
+        <button
+          id="linkPlayerBtn"
+          class="secondary"
+          type="button"
+        >
+          I already joined
+        </button>
+
       </div>
-      <p id="playerMessage" class="message" aria-live="polite"></p>
+
+      <p
+        id="playerMessage"
+        class="message"
+        aria-live="polite"
+      ></p>
+
     </section>
+
+
+    <!-- ======================================================
+         APP
+         ====================================================== -->
 
     <section class="hidden" id="appScreen">
+
+
+      <!-- DASHBOARD HEADER -->
+
       <div class="dashboard-head">
+
         <div>
-          <p class="step">COMPETITION</p>
-          <h2 id="playerHeading">Your dashboard</h2>
+
+          <p class="step">
+            COMPETITION
+          </p>
+
+          <h2 id="playerHeading">
+            Your dashboard
+          </h2>
+
         </div>
-        <span id="saveStatus" class="status-pill">Not submitted</span>
+
+        <span
+          id="saveStatus"
+          class="status-pill"
+        >
+          Not submitted
+        </span>
+
       </div>
+
+
+      <!-- DEADLINE -->
 
       <div class="deadline-banner">
-        <span id="deadlineLabel">Deadline</span>
-        <strong id="deadlineText">21 Aug · 8:00pm UK</strong>
+
+        <span id="deadlineLabel">
+          Deadline
+        </span>
+
+        <strong id="deadlineText">
+          21 Aug · 8:00pm UK
+        </strong>
+
       </div>
 
-      <nav class="tabs" aria-label="Competition sections">
-        <button class="tab active" data-tab="myPrediction" type="button">My Prediction</button>
-        <button class="tab" data-tab="players" type="button">Players</button>
-        <button id="predictionsTab" class="tab" data-tab="predictions" type="button">Predictions 🔒</button>
-        <button id="leaderboardTab" class="tab" data-tab="leaderboard" type="button">Leaderboard 🔒</button>
+
+      <!-- ====================================================
+           NAVIGATION
+           ==================================================== -->
+
+      <nav
+        class="tabs"
+        aria-label="Competition sections"
+      >
+
+        <button
+          class="tab active"
+          data-tab="myPrediction"
+          type="button"
+        >
+          My Prediction
+        </button>
+
+        <button
+          class="tab"
+          data-tab="players"
+          type="button"
+        >
+          Players
+        </button>
+
+        <button
+          id="leaderboardTab"
+          class="tab"
+          data-tab="leaderboard"
+          type="button"
+        >
+          Leaderboard 🔒
+        </button>
+
       </nav>
 
-      <section id="myPrediction" class="tab-panel">
+
+      <!-- ====================================================
+           MY PREDICTION
+           ==================================================== -->
+
+      <section
+        id="myPrediction"
+        class="tab-panel"
+      >
+
+
+        <!-- RANKING -->
+
         <section class="card ranking-card">
+
           <div class="section-row">
+
             <div>
-              <h3>Your Top 10</h3>
-              <p id="predictionHelp" class="muted compact">Add teams, then drag the handle or use ↑ ↓ to reorder.</p>
+
+              <h3>
+                Your Top 10
+              </h3>
+
+              <p
+                id="predictionHelp"
+                class="muted compact"
+              >
+                Add teams, then drag the handle or use ↑ ↓ to reorder.
+              </p>
+
             </div>
-            <button id="clearBtn" class="text-button" type="button">Clear</button>
+
+            <button
+              id="clearBtn"
+              class="text-button"
+              type="button"
+            >
+              Clear
+            </button>
+
           </div>
-          <ol id="rankingList" class="ranking-list"></ol>
+
+          <ol
+            id="rankingList"
+            class="ranking-list"
+          ></ol>
+
         </section>
 
-        <section class="card teams-card" id="teamsCard">
+
+        <!-- TEAMS -->
+
+        <section
+          class="card teams-card"
+          id="teamsCard"
+        >
+
           <div class="section-row">
+
             <div>
-              <h3>Choose teams</h3>
-              <p class="muted compact"><span id="selectedCount">0</span>/10 selected</p>
+
+              <h3>
+                Choose teams
+              </h3>
+
+              <p class="muted compact">
+                <span id="selectedCount">0</span>/10 selected
+              </p>
+
             </div>
+
           </div>
-          <div id="teamGrid" class="team-grid"></div>
+
+          <div
+            id="teamGrid"
+            class="team-grid"
+          ></div>
+
         </section>
 
-        <section class="card submit-card" id="submitCard">
-          <h3>Ready?</h3>
-          <p class="muted compact">You can change and resubmit your prediction until the deadline.</p>
-          <button id="submitPredictionBtn" type="button">Submit prediction</button>
-          <p id="predictionMessage" class="message" aria-live="polite"></p>
+
+        <!-- SUBMIT -->
+
+        <section
+          class="card submit-card"
+          id="submitCard"
+        >
+
+          <h3>
+            Ready?
+          </h3>
+
+          <p class="muted compact">
+            You can change and resubmit your prediction until the deadline.
+          </p>
+
+          <button
+            id="submitPredictionBtn"
+            type="button"
+          >
+            Submit prediction
+          </button>
+
+          <p
+            id="predictionMessage"
+            class="message"
+            aria-live="polite"
+          ></p>
+
         </section>
+
       </section>
 
-      <section id="players" class="tab-panel hidden">
+
+      <!-- ====================================================
+           PLAYERS
+           ==================================================== -->
+
+      <section
+        id="players"
+        class="tab-panel hidden"
+      >
+
         <section class="card">
+
           <div class="section-row">
+
             <div>
-              <h3>Players</h3>
-              <p class="muted compact">Who has entered and who has submitted.</p>
+
+              <h3>
+                Players
+              </h3>
+
+              <p class="muted compact">
+                Who has entered and who has submitted.
+              </p>
+
             </div>
-            <span id="playerCountBadge" class="small-pill">0 players</span>
+
+            <span
+              id="playerCountBadge"
+              class="small-pill"
+            >
+              0 players
+            </span>
+
           </div>
-          <div id="playersList" class="players-list"></div>
+
+          <div
+            id="playersList"
+            class="players-list"
+          ></div>
+
         </section>
+
       </section>
 
-      <section id="predictions" class="tab-panel hidden">
+
+      <!-- ====================================================
+           LEADERBOARD
+           ==================================================== -->
+
+      <section
+        id="leaderboard"
+        class="tab-panel hidden"
+      >
+
+
+        <!-- PREDICTOR LEADERBOARD -->
+
         <section class="card">
+
           <div class="section-row">
+
             <div>
-              <h3>Everyone's predictions</h3>
-              <p id="predictionsIntro" class="muted compact">Predictions unlock after the deadline.</p>
+
+              <h3>
+                Predictor leaderboard
+              </h3>
+
+              <p class="muted compact">
+                2 pts exact · 1 pt one place away · 0 pts otherwise
+              </p>
+
             </div>
+
+            <span class="small-pill">
+              Max 20
+            </span>
+
           </div>
 
-          <div id="predictionsLocked" class="locked-panel">
-            <div class="lock-icon">🔒</div>
-            <h3>Predictions are hidden</h3>
-            <p class="muted">You’ll be able to see everyone’s Top 10 after the prediction deadline.</p>
-            <p class="muted locked-note">Once predictions are locked, everyone’s submitted picks will become visible here.</p>
+
+          <!-- LOCKED -->
+
+          <div
+            id="leaderboardLocked"
+            class="locked-panel"
+          >
+
+            <div class="lock-icon">
+              🔒
+            </div>
+
+            <h3>
+              Leaderboard is hidden
+            </h3>
+
+            <p class="muted">
+              You’ll be able to see everyone’s scores after the prediction deadline.
+            </p>
+
+            <p class="muted locked-note">
+              Once predictions are locked, everyone will be scored against the current Premier League table.
+            </p>
+
           </div>
 
-          <div id="predictionCards" class="prediction-cards hidden"></div>
+
+          <!-- LIVE LEADERBOARD -->
+
+          <div
+            id="leaderboardContent"
+            class="hidden"
+          >
+
+            <div
+              id="leaderboardList"
+              class="leaderboard-list"
+            ></div>
+
+          </div>
+
         </section>
+
+
+        <!-- CURRENT PL TABLE -->
+
+        <section class="card">
+
+          <div class="section-row">
+
+            <div>
+
+              <h3>
+                Current Premier League table
+              </h3>
+
+              <p
+                id="standingsUpdated"
+                class="muted compact"
+              >
+                Waiting for standings data.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div
+            id="standingsTable"
+            class="standings-table"
+          ></div>
+
+        </section>
+
       </section>
-      
-      <section id="leaderboard" class="tab-panel hidden">
-        <section class="card">
-          <div class="section-row">
-            <div>
-              <h3>Predictor leaderboard</h3>
-              <p class="muted compact">2 pts exact · 1 pt one place away · 0 pts otherwise</p>
-            </div>
-            <span class="small-pill">Max 20</span>
-          </div>
 
-          <div id="leaderboardLocked" class="locked-panel">
-            <div class="lock-icon">🔒</div>
-            <h3>Leaderboard is hidden</h3>
-            <p class="muted">You’ll be able to see everyone’s scores after the prediction deadline.</p>
-            <p class="muted locked-note">Once predictions are locked, everyone will be scored against the current Premier League table.</p>
-          </div>
-
-          <div id="leaderboardContent" class="hidden">
-            <div id="leaderboardList" class="leaderboard-list"></div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="section-row">
-            <div>
-              <h3>Current Premier League table</h3>
-              <p id="standingsUpdated" class="muted compact">Waiting for standings data.</p>
-            </div>
-          </div>
-          <div id="standingsTable" class="standings-table"></div>
-        </section>
-      </section>
     </section>
+
   </main>
 
+
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
 
-    const SUPABASE_URL = "https://dzwtabmclyztofbcdhlu.supabase.co";
-    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_-2ySWaGGO-Uft-rwBxxbwA_wsqfI-fD";
-    const COMPETITION_SLUG = "halfway-2026-27";
+    import {
+      createClient
+    } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/+esm";
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    // ==========================================================
+    // SUPABASE
+    // ==========================================================
+
+    const SUPABASE_URL =
+      "https://dzwtabmclyztofbcdhlu.supabase.co";
+
+    const SUPABASE_PUBLISHABLE_KEY =
+      "sb_publishable_-2ySWaGGO-Uft-rwBxxbwA_wsqfI-fD";
+
+    const COMPETITION_SLUG =
+      "halfway-2026-27";
+
+
+    const supabase =
+      createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+      );
+
+
+    // ==========================================================
+    // ELEMENTS
+    // ==========================================================
 
     const screens = {
-      loading: document.getElementById("loadingScreen"),
-      competition: document.getElementById("competitionScreen"),
-      player: document.getElementById("playerScreen"),
-      app: document.getElementById("appScreen")
+
+      loading:
+        document.getElementById(
+          "loadingScreen"
+        ),
+
+      competition:
+        document.getElementById(
+          "competitionScreen"
+        ),
+
+      player:
+        document.getElementById(
+          "playerScreen"
+        ),
+
+      app:
+        document.getElementById(
+          "appScreen"
+        )
+
     };
 
-    const competitionMessage = document.getElementById("competitionMessage");
-    const playerMessage = document.getElementById("playerMessage");
-    const predictionMessage = document.getElementById("predictionMessage");
+
+    const competitionMessage =
+      document.getElementById(
+        "competitionMessage"
+      );
+
+
+    const playerMessage =
+      document.getElementById(
+        "playerMessage"
+      );
+
+
+    const predictionMessage =
+      document.getElementById(
+        "predictionMessage"
+      );
+
+
+    // ==========================================================
+    // STATE
+    // ==========================================================
 
     let teams = [];
-    let ranking = Array(10).fill(null);
-    let currentPlayer = null;
-    let competitionPlayers = [];
-    let competitionPredictions = [];
-    let competitionState = null;
-    let draggedIndex = null;
-    let liveStandings = [];
-    let predictorLeaderboard = [];
-    let playerBreakdown = [];
+
+    let ranking =
+      Array(10).fill(null);
+
+    let currentPlayer =
+      null;
+
+    let competitionPlayers =
+      [];
+
+    let competitionPredictions =
+      [];
+
+    let competitionState =
+      null;
+
+    let draggedIndex =
+      null;
+
+    let liveStandings =
+      [];
+
+    let predictorLeaderboard =
+      [];
+
+    let playerBreakdown =
+      [];
+
+
+    // ==========================================================
+    // RESPONSIVE HELPERS
+    // ==========================================================
 
     function isMobileRankingLayout() {
-      return window.matchMedia("(max-width: 600px), (pointer: coarse)").matches;
+
+      return window.matchMedia(
+        "(max-width: 600px), (pointer: coarse)"
+      ).matches;
+
     }
+
 
     function updatePredictionHelpText() {
-      const help = document.getElementById("predictionHelp");
+
+      const help =
+        document.getElementById(
+          "predictionHelp"
+        );
+
       if (!help) return;
 
+
       if (competitionState?.is_locked) {
-        help.textContent = "Your prediction is locked and can no longer be changed.";
+
+        help.textContent =
+          "Your prediction is locked and can no longer be changed.";
+
         return;
+
       }
 
-      help.textContent = isMobileRankingLayout()
-        ? "Use ↑ ↓ to move teams into position."
-        : "Drag teams or use ↑ ↓ to reorder.";
+
+      help.textContent =
+        isMobileRankingLayout()
+
+          ? "Use ↑ ↓ to move teams into position."
+
+          : "Drag teams or use ↑ ↓ to reorder.";
+
     }
+
+
+    // ==========================================================
+    // SCREENS
+    // ==========================================================
 
     function showScreen(name) {
-      Object.values(screens).forEach(el => el.classList.add("hidden"));
-      screens[name].classList.remove("hidden");
+
+      Object
+        .values(screens)
+        .forEach(
+          el =>
+            el.classList.add(
+              "hidden"
+            )
+        );
+
+
+      screens[name]
+        .classList
+        .remove(
+          "hidden"
+        );
+
     }
 
-    function setMessage(el, text, ok = false) {
-      el.textContent = text;
-      el.className = "message " + (ok ? "ok-text" : "error-text");
+
+    function setMessage(
+      el,
+      text,
+      ok = false
+    ) {
+
+      el.textContent =
+        text;
+
+      el.className =
+        "message " +
+        (
+          ok
+            ? "ok-text"
+            : "error-text"
+        );
+
     }
+
+
+    // ==========================================================
+    // SESSION
+    // ==========================================================
 
     async function ensureSession() {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw sessionError;
-      if (sessionData.session) return;
 
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) throw error;
+      const {
+        data: sessionData,
+        error: sessionError
+      } =
+        await supabase.auth.getSession();
+
+
+      if (sessionError)
+        throw sessionError;
+
+
+      if (sessionData.session)
+        return;
+
+
+      const { error } =
+        await supabase.auth
+          .signInAnonymously();
+
+
+      if (error)
+        throw error;
+
     }
+
 
     async function hasMembership() {
-      const { data, error } = await supabase
-        .from("competition_members")
-        .select("competition_id")
-        .limit(1);
 
-      if (error) throw error;
-      return Boolean(data?.length);
+      const {
+        data,
+        error
+      } =
+        await supabase
+          .from(
+            "competition_members"
+          )
+          .select(
+            "competition_id"
+          )
+          .limit(1);
+
+
+      if (error)
+        throw error;
+
+
+      return Boolean(
+        data?.length
+      );
+
     }
+
 
     async function getMyPlayer() {
-      const { data, error } = await supabase.rpc("get_my_player", {
-        p_slug: COMPETITION_SLUG
-      });
-      if (error) throw error;
-      return data?.[0] ?? null;
+
+      const {
+        data,
+        error
+      } =
+        await supabase.rpc(
+          "get_my_player",
+          {
+            p_slug:
+              COMPETITION_SLUG
+          }
+        );
+
+
+      if (error)
+        throw error;
+
+
+      return data?.[0] ??
+        null;
+
     }
+
+
+    // ==========================================================
+    // LOAD DATA
+    // ==========================================================
 
     async function loadCompetitionState() {
-      const { data, error } = await supabase.rpc("get_competition_state", {
-        p_slug: COMPETITION_SLUG
-      });
-      if (error) throw error;
-      competitionState = data?.[0] ?? null;
+
+      const {
+        data,
+        error
+      } =
+        await supabase.rpc(
+          "get_competition_state",
+          {
+            p_slug:
+              COMPETITION_SLUG
+          }
+        );
+
+
+      if (error)
+        throw error;
+
+
+      competitionState =
+        data?.[0] ??
+        null;
+
     }
+
 
     async function loadTeams() {
-      const { data, error } = await supabase
-        .from("teams")
-        .select("id,name,short_name")
-        .order("name");
-      if (error) throw error;
-      teams = data ?? [];
+
+      const {
+        data,
+        error
+      } =
+        await supabase
+          .from(
+            "teams"
+          )
+          .select(
+            "id,name,short_name"
+          )
+          .order(
+            "name"
+          );
+
+
+      if (error)
+        throw error;
+
+
+      teams =
+        data ??
+        [];
+
     }
+
 
     async function loadPrediction() {
-      const { data, error } = await supabase.rpc("get_my_prediction", {
-        p_slug: COMPETITION_SLUG
-      });
-      if (error) throw error;
 
-      ranking = Array(10).fill(null);
-      (data ?? []).forEach((row, index) => {
-        const position = Number(row.predicted_position ?? (index + 1)) - 1;
-        if (position >= 0 && position < 10) {
-          ranking[position] = {
-            id: row.team_id,
-            name: row.team_name,
-            short_name: row.short_name
-          };
-        }
-      });
+      const {
+        data,
+        error
+      } =
+        await supabase.rpc(
+          "get_my_prediction",
+          {
+            p_slug:
+              COMPETITION_SLUG
+          }
+        );
+
+
+      if (error)
+        throw error;
+
+
+      ranking =
+        Array(10)
+          .fill(null);
+
+
+      (data ?? [])
+        .forEach(
+          (row, index) => {
+
+            const position =
+              Number(
+                row.predicted_position ??
+                (index + 1)
+              ) - 1;
+
+
+            if (
+              position >= 0 &&
+              position < 10
+            ) {
+
+              ranking[position] = {
+
+                id:
+                  row.team_id,
+
+                name:
+                  row.team_name,
+
+                short_name:
+                  row.short_name
+
+              };
+
+            }
+
+          }
+        );
+
     }
 
+
     async function loadSharedCompetitionData() {
-      const playersResult = await supabase.rpc("get_competition_players", {
-        p_slug: COMPETITION_SLUG
-      });
 
-      if (playersResult.error) throw playersResult.error;
-      competitionPlayers = playersResult.data ?? [];
+      const playersResult =
+        await supabase.rpc(
+          "get_competition_players",
+          {
+            p_slug:
+              COMPETITION_SLUG
+          }
+        );
 
-      competitionPredictions = [];
 
-      if (competitionState?.predictions_visible) {
-        const predictionsResult = await supabase.rpc("get_competition_predictions", {
-          p_slug: COMPETITION_SLUG
-        });
-        if (predictionsResult.error) throw predictionsResult.error;
-        competitionPredictions = predictionsResult.data ?? [];
+      if (playersResult.error)
+        throw playersResult.error;
+
+
+      competitionPlayers =
+        playersResult.data ??
+        [];
+
+
+      /*
+       * Keep prediction loading intact.
+       *
+       * The dedicated Predictions tab has been removed,
+       * but prediction data remains part of the competition
+       * and may be useful to other functionality.
+       */
+
+      competitionPredictions =
+        [];
+
+
+      if (
+        competitionState?.predictions_visible
+      ) {
+
+        const predictionsResult =
+          await supabase.rpc(
+            "get_competition_predictions",
+            {
+              p_slug:
+                COMPETITION_SLUG
+            }
+          );
+
+
+        if (
+          predictionsResult.error
+        ) {
+          throw predictionsResult.error;
+        }
+
+
+        competitionPredictions =
+          predictionsResult.data ??
+          [];
+
       }
 
+
       renderPlayers();
-      renderSharedPredictions();
+
     }
 
 
     async function loadLiveStandings() {
-      const { data, error } = await supabase.rpc("get_live_standings", {
-        p_slug: COMPETITION_SLUG
-      });
 
-      if (error) throw error;
-      liveStandings = data ?? [];
+      const {
+        data,
+        error
+      } =
+        await supabase.rpc(
+          "get_live_standings",
+          {
+            p_slug:
+              COMPETITION_SLUG
+          }
+        );
+
+
+      if (error)
+        throw error;
+
+
+      liveStandings =
+        data ??
+        [];
+
+
       renderStandings();
+
     }
+
 
     async function loadLeaderboard() {
-      predictorLeaderboard = [];
-      playerBreakdown = [];
 
-      if (!competitionState?.predictions_visible) {
+      predictorLeaderboard =
+        [];
+
+      playerBreakdown =
+        [];
+
+
+      if (
+        !competitionState?.predictions_visible
+      ) {
+
         renderLeaderboard();
+
         return;
+
       }
 
-      const [leaderboardResult, breakdownResult] = await Promise.all([
-        supabase.rpc("get_predictor_leaderboard", { p_slug: COMPETITION_SLUG }),
-        supabase.rpc("get_predictor_breakdown", { p_slug: COMPETITION_SLUG })
-      ]);
 
-      if (leaderboardResult.error) throw leaderboardResult.error;
-      if (breakdownResult.error) throw breakdownResult.error;
+      const [
+        leaderboardResult,
+        breakdownResult
+      ] =
+        await Promise.all([
 
-      predictorLeaderboard = leaderboardResult.data ?? [];
-      playerBreakdown = breakdownResult.data ?? [];
+          supabase.rpc(
+            "get_predictor_leaderboard",
+            {
+              p_slug:
+                COMPETITION_SLUG
+            }
+          ),
+
+          supabase.rpc(
+            "get_predictor_breakdown",
+            {
+              p_slug:
+                COMPETITION_SLUG
+            }
+          )
+
+        ]);
+
+
+      if (
+        leaderboardResult.error
+      ) {
+        throw leaderboardResult.error;
+      }
+
+
+      if (
+        breakdownResult.error
+      ) {
+        throw breakdownResult.error;
+      }
+
+
+      predictorLeaderboard =
+        leaderboardResult.data ??
+        [];
+
+
+      playerBreakdown =
+        breakdownResult.data ??
+        [];
+
+
       renderLeaderboard();
+
     }
+
+
+    // ==========================================================
+    // INITIALISE
+    // ==========================================================
 
     async function initialise() {
+
       try {
+
         await ensureSession();
 
-        if (!(await hasMembership())) {
-          showScreen("competition");
+
+        if (
+          !(await hasMembership())
+        ) {
+
+          showScreen(
+            "competition"
+          );
+
           return;
+
         }
 
-        currentPlayer = await getMyPlayer();
+
+        currentPlayer =
+          await getMyPlayer();
+
 
         if (!currentPlayer) {
-          showScreen("player");
+
+          showScreen(
+            "player"
+          );
+
           return;
+
         }
 
+
         await openApp();
-      } catch (error) {
-        screens.loading.innerHTML = `
-          <h2>Connection problem</h2>
-          <p class="message error-text">${escapeHtml(error?.message || "Could not initialise the app.")}</p>`;
+
       }
+
+      catch (error) {
+
+        screens.loading.innerHTML = `
+
+          <h2>
+            Connection problem
+          </h2>
+
+          <p class="message error-text">
+            ${
+              escapeHtml(
+                error?.message ||
+                "Could not initialise the app."
+              )
+            }
+          </p>
+
+        `;
+
+      }
+
     }
+
+
+    // ==========================================================
+    // JOIN
+    // ==========================================================
 
     async function joinCompetition() {
-      const password = document.getElementById("competitionPassword").value;
+
+      const password =
+        document
+          .getElementById(
+            "competitionPassword"
+          )
+          .value;
+
+
       if (!password) {
-        setMessage(competitionMessage, "Enter the shared competition password.");
+
+        setMessage(
+          competitionMessage,
+          "Enter the shared competition password."
+        );
+
         return;
+
       }
 
-      const { error } = await supabase.rpc("join_competition", {
-        p_slug: COMPETITION_SLUG,
-        p_password: password
-      });
+
+      const { error } =
+        await supabase.rpc(
+          "join_competition",
+          {
+
+            p_slug:
+              COMPETITION_SLUG,
+
+            p_password:
+              password
+
+          }
+        );
+
 
       if (error) {
-        setMessage(competitionMessage, "Incorrect competition password.");
+
+        setMessage(
+          competitionMessage,
+          "Incorrect competition password."
+        );
+
         return;
+
       }
 
-      showScreen("player");
+
+      showScreen(
+        "player"
+      );
+
     }
+
+
+    // ==========================================================
+    // PLAYER
+    // ==========================================================
 
     function getPlayerInputs() {
-      const name = document.getElementById("playerName").value.trim();
-      const pin = document.getElementById("playerPin").value.trim();
 
-      if (name.length < 2 || name.length > 30) {
-        setMessage(playerMessage, "Enter a name between 2 and 30 characters.");
+      const name =
+        document
+          .getElementById(
+            "playerName"
+          )
+          .value
+          .trim();
+
+
+      const pin =
+        document
+          .getElementById(
+            "playerPin"
+          )
+          .value
+          .trim();
+
+
+      if (
+        name.length < 2 ||
+        name.length > 30
+      ) {
+
+        setMessage(
+          playerMessage,
+          "Enter a name between 2 and 30 characters."
+        );
+
         return null;
+
       }
 
-      if (!/^\d{4,6}$/.test(pin)) {
-        setMessage(playerMessage, "PIN must be 4–6 digits.");
+
+      if (
+        !/^\d{4,6}$/.test(pin)
+      ) {
+
+        setMessage(
+          playerMessage,
+          "PIN must be 4–6 digits."
+        );
+
         return null;
+
       }
 
-      return { name, pin };
+
+      return {
+        name,
+        pin
+      };
+
     }
+
 
     async function createPlayer() {
-      const input = getPlayerInputs();
-      if (!input) return;
 
-      const { data, error } = await supabase.rpc("create_player", {
-        p_slug: COMPETITION_SLUG,
-        p_name: input.name,
-        p_pin: input.pin
-      });
+      const input =
+        getPlayerInputs();
+
+
+      if (!input)
+        return;
+
+
+      const {
+        data,
+        error
+      } =
+        await supabase.rpc(
+          "create_player",
+          {
+
+            p_slug:
+              COMPETITION_SLUG,
+
+            p_name:
+              input.name,
+
+            p_pin:
+              input.pin
+
+          }
+        );
+
 
       if (error) {
-        setMessage(playerMessage, error.message || "Could not create player.");
+
+        setMessage(
+          playerMessage,
+          error.message ||
+          "Could not create player."
+        );
+
         return;
+
       }
 
-      currentPlayer = data?.[0] ?? { player_name: input.name };
+
+      currentPlayer =
+        data?.[0] ??
+        {
+          player_name:
+            input.name
+        };
+
+
       await openApp();
+
     }
+
 
     async function linkPlayer() {
-      const input = getPlayerInputs();
-      if (!input) return;
 
-      const { data, error } = await supabase.rpc("link_player", {
-        p_slug: COMPETITION_SLUG,
-        p_name: input.name,
-        p_pin: input.pin
-      });
+      const input =
+        getPlayerInputs();
+
+
+      if (!input)
+        return;
+
+
+      const {
+        data,
+        error
+      } =
+        await supabase.rpc(
+          "link_player",
+          {
+
+            p_slug:
+              COMPETITION_SLUG,
+
+            p_name:
+              input.name,
+
+            p_pin:
+              input.pin
+
+          }
+        );
+
 
       if (error) {
-        setMessage(playerMessage, "Name or PIN is incorrect.");
+
+        setMessage(
+          playerMessage,
+          "Name or PIN is incorrect."
+        );
+
         return;
+
       }
 
-      currentPlayer = data?.[0] ?? { player_name: input.name };
+
+      currentPlayer =
+        data?.[0] ??
+        {
+          player_name:
+            input.name
+        };
+
+
       await openApp();
+
     }
+
+
+    // ==========================================================
+    // OPEN APP
+    // ==========================================================
 
     async function openApp() {
-      await loadCompetitionState();
-      await Promise.all([loadTeams(), loadPrediction(), loadLiveStandings()]);
-      await Promise.all([loadSharedCompetitionData(), loadLeaderboard()]);
 
-      document.getElementById("playerHeading").textContent =
-        `${currentPlayer.player_name}'s dashboard`;
+      await loadCompetitionState();
+
+
+      await Promise.all([
+
+        loadTeams(),
+
+        loadPrediction(),
+
+        loadLiveStandings()
+
+      ]);
+
+
+      await Promise.all([
+
+        loadSharedCompetitionData(),
+
+        loadLeaderboard()
+
+      ]);
+
+
+      document
+        .getElementById(
+          "playerHeading"
+        )
+        .textContent =
+          `${currentPlayer.player_name}'s dashboard`;
+
 
       applyCompetitionState();
+
       render();
-      showScreen("app");
-      
-      const savedTab = localStorage.getItem("plpActiveTab") || "myPrediction";
-      switchTab(savedTab);
+
+      showScreen(
+        "app"
+      );
+
+
+      const savedTab =
+        localStorage.getItem(
+          "plpActiveTab"
+        ) ||
+        "myPrediction";
+
+
+      switchTab(
+        savedTab
+      );
+
     }
 
+
+    // ==========================================================
+    // COMPETITION STATE
+    // ==========================================================
+
     function applyCompetitionState() {
-      const locked = Boolean(competitionState?.is_locked);
-      const visible = Boolean(competitionState?.predictions_visible);
 
-      const deadlineLabel = document.getElementById("deadlineLabel");
-      deadlineLabel.textContent = "Deadline";
+      const locked =
+        Boolean(
+          competitionState?.is_locked
+        );
 
-      document.getElementById("teamsCard").classList.toggle("hidden", locked);
-      document.getElementById("submitCard").classList.toggle("hidden", locked);
-      document.getElementById("clearBtn").classList.toggle("hidden", locked);
+
+      const visible =
+        Boolean(
+          competitionState?.predictions_visible
+        );
+
+
+      const deadlineLabel =
+        document.getElementById(
+          "deadlineLabel"
+        );
+
+
+      deadlineLabel.textContent =
+        "Deadline";
+
+
+      document
+        .getElementById(
+          "teamsCard"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          locked
+        );
+
+
+      document
+        .getElementById(
+          "submitCard"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          locked
+        );
+
+
+      document
+        .getElementById(
+          "clearBtn"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          locked
+        );
+
 
       updatePredictionHelpText();
 
-      document.getElementById("predictionsLocked").classList.toggle("hidden", visible);
-      document.getElementById("predictionCards").classList.toggle("hidden", !visible);
-      document.getElementById("predictionsIntro").textContent = visible
-        ? "Open a player to see their submitted Top 10."
-        : "Predictions unlock after the deadline.";
-      document.getElementById("predictionsTab").textContent = visible
-        ? "Predictions"
-        : "Predictions 🔒";
 
-      document.getElementById("leaderboardLocked").classList.toggle("hidden", visible);
-      document.getElementById("leaderboardContent").classList.toggle("hidden", !visible);
-      document.getElementById("leaderboardTab").textContent = visible
-        ? "Leaderboard"
-        : "Leaderboard 🔒";
+      document
+        .getElementById(
+          "leaderboardLocked"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          visible
+        );
+
+
+      document
+        .getElementById(
+          "leaderboardContent"
+        )
+        .classList
+        .toggle(
+          "hidden",
+          !visible
+        );
+
+
+      document
+        .getElementById(
+          "leaderboardTab"
+        )
+        .textContent =
+          visible
+            ? "Leaderboard"
+            : "Leaderboard 🔒";
+
 
       updateSaveStatus();
+
     }
+
+
+    // ==========================================================
+    // SAVE STATUS
+    // ==========================================================
 
     function updateSaveStatus() {
-      const pill = document.getElementById("saveStatus");
 
-      if (ranking.length === 10 && ranking.every(Boolean)) {
-        pill.textContent = competitionState?.is_locked ? "Locked" : "Submitted";
-        pill.classList.add("saved");
-      } else {
-        pill.textContent = competitionState?.is_locked ? "Locked" : "Not submitted";
-        pill.classList.remove("saved");
+      const pill =
+        document.getElementById(
+          "saveStatus"
+        );
+
+
+      if (
+        ranking.length === 10 &&
+        ranking.every(Boolean)
+      ) {
+
+        pill.textContent =
+          competitionState?.is_locked
+            ? "Locked"
+            : "Submitted";
+
+
+        pill.classList.add(
+          "saved"
+        );
+
       }
+
+      else {
+
+        pill.textContent =
+          competitionState?.is_locked
+            ? "Locked"
+            : "Not submitted";
+
+
+        pill.classList.remove(
+          "saved"
+        );
+
+      }
+
     }
+
+
+    // ==========================================================
+    // MAIN RENDER
+    // ==========================================================
 
     function render() {
+
       renderRanking();
+
       renderTeams();
-      document.getElementById("selectedCount").textContent = ranking.filter(Boolean).length;
+
+
+      document
+        .getElementById(
+          "selectedCount"
+        )
+        .textContent =
+          ranking
+            .filter(Boolean)
+            .length;
+
     }
 
+
+    // ==========================================================
+    // RANKING
+    // ==========================================================
+
     function renderRanking() {
-      const list = document.getElementById("rankingList");
-      list.innerHTML = "";
 
-      const locked = Boolean(competitionState?.is_locked);
+      const list =
+        document.getElementById(
+          "rankingList"
+        );
 
-      for (let i = 0; i < 10; i++) {
-        const team = ranking[i];
-        const li = document.createElement("li");
+
+      list.innerHTML =
+        "";
+
+
+      const locked =
+        Boolean(
+          competitionState?.is_locked
+        );
+
+
+      for (
+        let i = 0;
+        i < 10;
+        i++
+      ) {
+
+        const team =
+          ranking[i];
+
+
+        const li =
+          document.createElement(
+            "li"
+          );
+
 
         if (!team) {
-          li.className = "rank-row empty";
-          li.dataset.index = String(i);
+
+          li.className =
+            "rank-row empty";
+
+
+          li.dataset.index =
+            String(i);
+
+
           li.innerHTML = `
-            <span class="rank-number">${i + 1}</span>
-            <span class="empty-label">${locked ? "No team selected" : "Choose a team"}</span>`;
 
-          if (!locked && !isMobileRankingLayout()) {
-            li.addEventListener("dragover", event => {
-              event.preventDefault();
-              li.classList.add("drop-target");
-            });
+            <span class="rank-number">
+              ${i + 1}
+            </span>
 
-            li.addEventListener("dragleave", () => {
-              li.classList.remove("drop-target");
-            });
+            <span class="empty-label">
+              ${
+                locked
+                  ? "No team selected"
+                  : "Choose a team"
+              }
+            </span>
 
-            li.addEventListener("drop", event => {
-              event.preventDefault();
-              li.classList.remove("drop-target");
+          `;
 
-              const targetIndex = Number(li.dataset.index);
 
-              if (draggedIndex === null || draggedIndex === targetIndex) return;
+          if (
+            !locked &&
+            !isMobileRankingLayout()
+          ) {
 
-              [ranking[draggedIndex], ranking[targetIndex]] =
-                [ranking[targetIndex], ranking[draggedIndex]];
+            li.addEventListener(
+              "dragover",
+              event => {
 
-              draggedIndex = null;
-              markChanged();
-              render();
-            });
+                event.preventDefault();
+
+                li.classList.add(
+                  "drop-target"
+                );
+
+              }
+            );
+
+
+            li.addEventListener(
+              "dragleave",
+              () => {
+
+                li.classList.remove(
+                  "drop-target"
+                );
+
+              }
+            );
+
+
+            li.addEventListener(
+              "drop",
+              event => {
+
+                event.preventDefault();
+
+
+                li.classList.remove(
+                  "drop-target"
+                );
+
+
+                const targetIndex =
+                  Number(
+                    li.dataset.index
+                  );
+
+
+                if (
+                  draggedIndex === null ||
+                  draggedIndex === targetIndex
+                ) {
+                  return;
+                }
+
+
+                [
+                  ranking[draggedIndex],
+                  ranking[targetIndex]
+                ] =
+                [
+                  ranking[targetIndex],
+                  ranking[draggedIndex]
+                ];
+
+
+                draggedIndex =
+                  null;
+
+
+                markChanged();
+
+                render();
+
+              }
+            );
+
           }
 
-          list.appendChild(li);
+
+          list.appendChild(
+            li
+          );
+
+
           continue;
+
         }
 
-        const mobileRanking = isMobileRankingLayout();
+
+        const mobileRanking =
+          isMobileRankingLayout();
+
 
         li.className =
           "rank-row" +
-          (locked ? " readonly" : "") +
-          (mobileRanking && !locked ? " mobile-controls" : "");
+          (
+            locked
+              ? " readonly"
+              : ""
+          ) +
+          (
+            mobileRanking &&
+            !locked
+              ? " mobile-controls"
+              : ""
+          );
 
-        li.dataset.index = String(i);
-        li.draggable = !locked && !mobileRanking;
+
+        li.dataset.index =
+          String(i);
+
+
+        li.draggable =
+          !locked &&
+          !mobileRanking;
+
 
         if (locked) {
+
           li.innerHTML = `
-            <span class="rank-number">${i + 1}</span>
-            <span class="badge">${escapeHtml(team.short_name || "")}</span>
-            <span class="team-name">${escapeHtml(team.name)}</span>`;
-          list.appendChild(li);
+
+            <span class="rank-number">
+              ${i + 1}
+            </span>
+
+            <span class="badge">
+              ${escapeHtml(team.short_name || "")}
+            </span>
+
+            <span class="team-name">
+              ${escapeHtml(team.name)}
+            </span>
+
+          `;
+
+
+          list.appendChild(
+            li
+          );
+
+
           continue;
+
         }
+
 
         li.innerHTML = `
-          <span class="rank-number">${i + 1}</span>
-          ${mobileRanking
-            ? ""
-            : `<button class="drag-handle" type="button" aria-label="Drag ${escapeHtml(team.name)}">☰</button>`}
-          <span class="team-name">${escapeHtml(team.name)}</span>
+
+          <span class="rank-number">
+            ${i + 1}
+          </span>
+
+          ${
+            mobileRanking
+              ? ""
+              : `
+                <button
+                  class="drag-handle"
+                  type="button"
+                  aria-label="Drag ${escapeHtml(team.name)}"
+                >
+                  ☰
+                </button>
+              `
+          }
+
+          <span class="team-name">
+            ${escapeHtml(team.name)}
+          </span>
+
           <span class="row-actions">
-            <button class="mini-btn up-btn" type="button" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
-            <button class="mini-btn down-btn" type="button" aria-label="Move down" ${i === 9 ? "disabled" : ""}>↓</button>
-            <button class="mini-btn remove-btn" type="button" aria-label="Remove">×</button>
-          </span>`;
 
-        li.querySelector(".up-btn").addEventListener("click", () => moveTeam(i, -1));
-        li.querySelector(".down-btn").addEventListener("click", () => moveTeam(i, 1));
-        li.querySelector(".remove-btn").addEventListener("click", () => removeTeam(i));
+            <button
+              class="mini-btn up-btn"
+              type="button"
+              aria-label="Move up"
+              ${i === 0 ? "disabled" : ""}
+            >
+              ↑
+            </button>
 
-        if (!mobileRanking) {
-          li.addEventListener("dragstart", () => {
-            draggedIndex = i;
-            li.classList.add("dragging");
-          });
+            <button
+              class="mini-btn down-btn"
+              type="button"
+              aria-label="Move down"
+              ${i === 9 ? "disabled" : ""}
+            >
+              ↓
+            </button>
 
-          li.addEventListener("dragend", () => {
-            draggedIndex = null;
-            li.classList.remove("dragging");
-          });
+            <button
+              class="mini-btn remove-btn"
+              type="button"
+              aria-label="Remove"
+            >
+              ×
+            </button>
 
-          li.addEventListener("dragover", event => event.preventDefault());
+          </span>
 
-          li.addEventListener("drop", event => {
-            event.preventDefault();
-            const targetIndex = Number(li.dataset.index);
-            if (draggedIndex === null || draggedIndex === targetIndex) return;
-            [ranking[draggedIndex], ranking[targetIndex]] =
-              [ranking[targetIndex], ranking[draggedIndex]];
-            markChanged();
-            render();
-          });
+        `;
+
+
+        li.querySelector(
+          ".up-btn"
+        )
+        .addEventListener(
+          "click",
+          () =>
+            moveTeam(
+              i,
+              -1
+            )
+        );
+
+
+        li.querySelector(
+          ".down-btn"
+        )
+        .addEventListener(
+          "click",
+          () =>
+            moveTeam(
+              i,
+              1
+            )
+        );
+
+
+        li.querySelector(
+          ".remove-btn"
+        )
+        .addEventListener(
+          "click",
+          () =>
+            removeTeam(i)
+        );
+
+
+        if (
+          !mobileRanking
+        ) {
+
+          li.addEventListener(
+            "dragstart",
+            () => {
+
+              draggedIndex =
+                i;
+
+
+              li.classList.add(
+                "dragging"
+              );
+
+            }
+          );
+
+
+          li.addEventListener(
+            "dragend",
+            () => {
+
+              draggedIndex =
+                null;
+
+
+              li.classList.remove(
+                "dragging"
+              );
+
+            }
+          );
+
+
+          li.addEventListener(
+            "dragover",
+            event =>
+              event.preventDefault()
+          );
+
+
+          li.addEventListener(
+            "drop",
+            event => {
+
+              event.preventDefault();
+
+
+              const targetIndex =
+                Number(
+                  li.dataset.index
+                );
+
+
+              if (
+                draggedIndex === null ||
+                draggedIndex === targetIndex
+              ) {
+                return;
+              }
+
+
+              [
+                ranking[draggedIndex],
+                ranking[targetIndex]
+              ] =
+              [
+                ranking[targetIndex],
+                ranking[draggedIndex]
+              ];
+
+
+              markChanged();
+
+              render();
+
+            }
+          );
+
         }
 
-        list.appendChild(li);
+
+        list.appendChild(
+          li
+        );
+
       }
+
     }
+
+
+    // ==========================================================
+    // TEAMS
+    // ==========================================================
 
     function renderTeams() {
-      const grid = document.getElementById("teamGrid");
-      grid.innerHTML = "";
 
-      if (competitionState?.is_locked) return;
+      const grid =
+        document.getElementById(
+          "teamGrid"
+        );
 
-      teams.forEach(team => {
-        const selected = ranking.some(t => t?.id === team.id);
-        const hasEmptySlot = ranking.some(t => !t);
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "team-choice" + (selected ? " selected" : "");
-        button.disabled = selected || !hasEmptySlot;
-        button.innerHTML = `
-          <span class="badge">${escapeHtml(team.short_name || "")}</span>
-          <span>${escapeHtml(team.name)}</span>`;
 
-        button.addEventListener("click", () => {
-          if (selected) return;
-          const emptyIndex = ranking.findIndex(t => !t);
-          if (emptyIndex === -1) return;
-          ranking[emptyIndex] = team;
-          markChanged();
-          render();
-        });
+      grid.innerHTML =
+        "";
 
-        grid.appendChild(button);
-      });
+
+      if (
+        competitionState?.is_locked
+      ) {
+        return;
+      }
+
+
+      teams.forEach(
+        team => {
+
+          const selected =
+            ranking.some(
+              t =>
+                t?.id ===
+                team.id
+            );
+
+
+          const hasEmptySlot =
+            ranking.some(
+              t => !t
+            );
+
+
+          const button =
+            document.createElement(
+              "button"
+            );
+
+
+          button.type =
+            "button";
+
+
+          button.className =
+            "team-choice" +
+            (
+              selected
+                ? " selected"
+                : ""
+            );
+
+
+          button.disabled =
+            selected ||
+            !hasEmptySlot;
+
+
+          button.innerHTML = `
+
+            <span class="badge">
+              ${escapeHtml(team.short_name || "")}
+            </span>
+
+            <span>
+              ${escapeHtml(team.name)}
+            </span>
+
+          `;
+
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              if (selected)
+                return;
+
+
+              const emptyIndex =
+                ranking.findIndex(
+                  t => !t
+                );
+
+
+              if (
+                emptyIndex === -1
+              ) {
+                return;
+              }
+
+
+              ranking[emptyIndex] =
+                team;
+
+
+              markChanged();
+
+              render();
+
+            }
+          );
+
+
+          grid.appendChild(
+            button
+          );
+
+        }
+      );
+
     }
+
+
+    // ==========================================================
+    // PLAYERS
+    // ==========================================================
 
     function renderPlayers() {
-      const container = document.getElementById("playersList");
 
-      document.getElementById("playerCountBadge").textContent =
-        `${competitionPlayers.length} player${competitionPlayers.length === 1 ? "" : "s"}`;
+      const container =
+        document.getElementById(
+          "playersList"
+        );
 
-      if (!competitionPlayers.length) {
-        container.innerHTML = `<p class="muted">No players yet.</p>`;
+
+      document
+        .getElementById(
+          "playerCountBadge"
+        )
+        .textContent =
+          `${competitionPlayers.length} player${
+            competitionPlayers.length === 1
+              ? ""
+              : "s"
+          }`;
+
+
+      if (
+        !competitionPlayers.length
+      ) {
+
+        container.innerHTML =
+          `<p class="muted">No players yet.</p>`;
+
+
         return;
+
       }
 
-      container.innerHTML = competitionPlayers.map(player => `
-        <div class="player-row">
-          <div class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</div>
-          <div class="player-meta">
-            <strong>${escapeHtml(player.player_name)}</strong>
-            <span>
-              ${player.is_submitted
-                ? "Prediction submitted"
-                : competitionState?.is_locked
-                  ? "Missed deadline"
-                  : "Waiting for prediction"}
-            </span>
-          </div>
-          <span class="submission-badge ${player.is_submitted ? "yes" : "no"}">
-            ${player.is_submitted
-              ? "Submitted"
-              : competitionState?.is_locked
-                ? "No prediction"
-                : "Not yet"}
-          </span>
-        </div>
-      `).join("");
+
+      container.innerHTML =
+        competitionPlayers
+          .map(
+            player => `
+
+              <div class="player-row">
+
+                <div class="avatar">
+                  ${
+                    escapeHtml(
+                      player.player_name
+                        .charAt(0)
+                        .toUpperCase()
+                    )
+                  }
+                </div>
+
+
+                <div class="player-meta">
+
+                  <strong>
+                    ${escapeHtml(player.player_name)}
+                  </strong>
+
+                  <span>
+
+                    ${
+                      player.is_submitted
+
+                        ? "Prediction submitted"
+
+                        : competitionState?.is_locked
+
+                          ? "Missed deadline"
+
+                          : "Waiting for prediction"
+                    }
+
+                  </span>
+
+                </div>
+
+
+                <span
+                  class="submission-badge ${
+                    player.is_submitted
+                      ? "yes"
+                      : "no"
+                  }"
+                >
+
+                  ${
+                    player.is_submitted
+
+                      ? "Submitted"
+
+                      : competitionState?.is_locked
+
+                        ? "No prediction"
+
+                        : "Not yet"
+                  }
+
+                </span>
+
+              </div>
+
+            `
+          )
+          .join("");
+
     }
 
-    function renderSharedPredictions() {
-      const container = document.getElementById("predictionCards");
 
-      if (!competitionState?.predictions_visible) {
-        container.innerHTML = "";
-        return;
-      }
-
-      const submittedPlayers = competitionPlayers.filter(p => p.is_submitted);
-
-      if (!submittedPlayers.length) {
-        container.innerHTML = `<p class="muted">No submitted predictions.</p>`;
-        return;
-      }
-
-      container.innerHTML = submittedPlayers.map(player => {
-        const picks = competitionPredictions
-          .filter(p => p.player_id === player.player_id)
-          .sort((a, b) => a.predicted_position - b.predicted_position);
-
-        return `
-          <details class="prediction-card">
-            <summary>
-              <span class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</span>
-              <span class="summary-name">${escapeHtml(player.player_name)}</span>
-              <span class="submission-badge yes">Submitted</span>
-            </summary>
-            <ol class="shared-ranking">
-              ${picks.map(pick => `
-                <li>
-                  <span class="rank-number">${pick.predicted_position}</span>
-                  <span class="badge">${escapeHtml(pick.short_name || "")}</span>
-                  <strong>${escapeHtml(pick.team_name)}</strong>
-                </li>
-              `).join("")}
-            </ol>
-          </details>`;
-      }).join("");
-    }
-
+    // ==========================================================
+    // LIVE STANDINGS
+    // ==========================================================
 
     function renderStandings() {
-      const container = document.getElementById("standingsTable");
-      const updated = document.getElementById("standingsUpdated");
 
-      if (!liveStandings.length) {
+      const container =
+        document.getElementById(
+          "standingsTable"
+        );
+
+
+      const updated =
+        document.getElementById(
+          "standingsUpdated"
+        );
+
+
+      if (
+        !liveStandings.length
+      ) {
+
         container.innerHTML = `
+
           <div class="empty-state">
-            <strong>No standings loaded yet</strong>
-            <span>We’ll connect the live football feed next.</span>
-          </div>`;
-        updated.textContent = "Waiting for standings data.";
+
+            <strong>
+              No standings loaded yet
+            </strong>
+
+            <span>
+              We’ll connect the live football feed next.
+            </span>
+
+          </div>
+
+        `;
+
+
+        updated.textContent =
+          "Waiting for standings data.";
+
+
         return;
+
       }
 
-      const latest = liveStandings
-        .map(row => row.updated_at)
-        .filter(Boolean)
-        .sort()
-        .at(-1);
 
-      updated.textContent = latest
-        ? `Last updated ${new Date(latest).toLocaleString("en-GB", {
-            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
-          })}`
-        : "Current standings";
+      const latest =
+        liveStandings
+          .map(
+            row =>
+              row.updated_at
+          )
+          .filter(Boolean)
+          .sort()
+          .at(-1);
+
+
+      updated.textContent =
+        latest
+
+          ? `Last updated ${
+              new Date(
+                latest
+              )
+              .toLocaleString(
+                "en-GB",
+                {
+
+                  day:
+                    "2-digit",
+
+                  month:
+                    "short",
+
+                  hour:
+                    "2-digit",
+
+                  minute:
+                    "2-digit"
+
+                }
+              )
+            }`
+
+          : "Current standings";
+
 
       container.innerHTML = `
+
         <div class="standings-head">
-          <span>Pos</span><span>Team</span><span>PL</span><span>GD</span><span>Pts</span>
+
+          <span>
+            Pos
+          </span>
+
+          <span>
+            Team
+          </span>
+
+          <span>
+            PL
+          </span>
+
+          <span>
+            GD
+          </span>
+
+          <span>
+            Pts
+          </span>
+
         </div>
-        ${liveStandings.map(row => `
-          <div class="standings-row">
-            <span class="position-cell">${row.position}</span>
-            <span class="standings-team">
-              <span class="badge">${escapeHtml(row.short_name || "")}</span>
-              <strong>${escapeHtml(row.team_name)}</strong>
-            </span>
-            <span>${row.played}</span>
-            <span>${row.goal_difference > 0 ? "+" : ""}${row.goal_difference}</span>
-            <strong>${row.points}</strong>
-          </div>
-        `).join("")}`;
+
+
+        ${
+          liveStandings
+            .map(
+              row => `
+
+                <div class="standings-row">
+
+                  <span class="position-cell">
+                    ${row.position}
+                  </span>
+
+
+                  <span class="standings-team">
+
+                    <span class="badge">
+                      ${escapeHtml(row.short_name || "")}
+                    </span>
+
+                    <strong>
+                      ${escapeHtml(row.team_name)}
+                    </strong>
+
+                  </span>
+
+
+                  <span>
+                    ${row.played}
+                  </span>
+
+
+                  <span>
+
+                    ${
+                      row.goal_difference > 0
+                        ? "+"
+                        : ""
+                    }
+
+                    ${row.goal_difference}
+
+                  </span>
+
+
+                  <strong>
+                    ${row.points}
+                  </strong>
+
+                </div>
+
+              `
+            )
+            .join("")
+        }
+
+      `;
+
     }
+
+
+    // ==========================================================
+    // LEADERBOARD
+    // ==========================================================
 
     function renderLeaderboard() {
-      const container = document.getElementById("leaderboardList");
 
-      if (!competitionState?.predictions_visible) {
-        container.innerHTML = "";
+      const container =
+        document.getElementById(
+          "leaderboardList"
+        );
+
+
+      if (
+        !competitionState?.predictions_visible
+      ) {
+
+        container.innerHTML =
+          "";
+
         return;
+
       }
 
-      if (!liveStandings.length) {
+
+      if (
+        !liveStandings.length
+      ) {
+
         container.innerHTML = `
+
           <div class="empty-state">
-            <strong>Leaderboard waiting for standings</strong>
-            <span>Scores will calculate automatically once the current PL table is loaded.</span>
-          </div>`;
+
+            <strong>
+              Leaderboard waiting for standings
+            </strong>
+
+            <span>
+              Scores will calculate automatically once the current PL table is loaded.
+            </span>
+
+          </div>
+
+        `;
+
+
         return;
+
       }
 
-      if (!predictorLeaderboard.length) {
-        container.innerHTML = `<p class="muted">No submitted players to score yet.</p>`;
+
+      if (
+        !predictorLeaderboard.length
+      ) {
+
+        container.innerHTML =
+          `<p class="muted">No submitted players to score yet.</p>`;
+
+
         return;
+
       }
 
-      let previousScore = null;
-      let displayedPosition = 0;
-      
-      container.innerHTML = predictorLeaderboard.map((player, index) => {
-        if (player.score !== previousScore) {
-          displayedPosition = index + 1;
-          previousScore = player.score;
-        }
-        
-        const isLeader = displayedPosition === 1;
-        
-        const breakdown = playerBreakdown
-          .filter(row => row.player_id === player.player_id)
-          .sort((a, b) => a.predicted_position - b.predicted_position);
 
-        return `
-          <details class="leader-row ${isLeader ? "leader-row-top" : ""}">
-            <summary>
-              <span class="leader-position">${displayedPosition}</span>
-              <span class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</span>
-              <span class="leader-name">
-                <strong>${escapeHtml(player.player_name)}</strong>
-                <small>${player.exact_picks} exact · ${player.near_picks} one away</small>
-              </span>
-              <span class="leader-score">${player.score}<small>/20</small></span>
-            </summary>
-            <div class="score-breakdown">
-              ${breakdown.map(row => `
-                <div class="score-row">
-                  <span class="rank-number">${row.predicted_position}</span>
-                  <span class="score-team">${escapeHtml(row.team_name)}</span>
-                  <span class="actual-pos">Now ${row.actual_position ?? "—"}</span>
-                  <span class="points-badge points-${row.points_awarded}">${row.points_awarded} pt${row.points_awarded === 1 ? "" : "s"}</span>
-                </div>
-              `).join("")}
-            </div>
-          </details>`;
-      }).join("");
+      let previousScore =
+        null;
+
+
+      let displayedPosition =
+        0;
+
+
+      container.innerHTML =
+        predictorLeaderboard
+          .map(
+            (player, index) => {
+
+
+              if (
+                player.score !==
+                previousScore
+              ) {
+
+                displayedPosition =
+                  index + 1;
+
+
+                previousScore =
+                  player.score;
+
+              }
+
+
+              const isLeader =
+                displayedPosition === 1;
+
+
+              const breakdown =
+                playerBreakdown
+                  .filter(
+                    row =>
+                      row.player_id ===
+                      player.player_id
+                  )
+                  .sort(
+                    (a, b) =>
+                      a.predicted_position -
+                      b.predicted_position
+                  );
+
+
+              return `
+
+                <details
+                  class="leader-row ${
+                    isLeader
+                      ? "leader-row-top"
+                      : ""
+                  }"
+                >
+
+                  <summary>
+
+                    <span class="leader-position">
+                      ${displayedPosition}
+                    </span>
+
+
+                    <span class="avatar">
+
+                      ${
+                        escapeHtml(
+                          player.player_name
+                            .charAt(0)
+                            .toUpperCase()
+                        )
+                      }
+
+                    </span>
+
+
+                    <span class="leader-name">
+
+                      <strong>
+                        ${escapeHtml(player.player_name)}
+                      </strong>
+
+                      <small>
+                        ${player.exact_picks} exact · ${player.near_picks} one away
+                      </small>
+
+                    </span>
+
+
+                    <span class="leader-score">
+
+                      ${player.score}
+
+                      <small>
+                        /20
+                      </small>
+
+                    </span>
+
+                  </summary>
+
+
+                  <div class="score-breakdown">
+
+                    ${
+                      breakdown
+                        .map(
+                          row => `
+
+                            <div class="score-row">
+
+                              <span class="rank-number">
+                                ${row.predicted_position}
+                              </span>
+
+
+                              <span class="score-team">
+                                ${escapeHtml(row.team_name)}
+                              </span>
+
+
+                              <span class="actual-pos">
+
+                                Now ${
+                                  row.actual_position ??
+                                  "—"
+                                }
+
+                              </span>
+
+
+                              <span
+                                class="points-badge points-${row.points_awarded}"
+                              >
+
+                                ${row.points_awarded}
+                                pt${
+                                  row.points_awarded === 1
+                                    ? ""
+                                    : "s"
+                                }
+
+                              </span>
+
+                            </div>
+
+                          `
+                        )
+                        .join("")
+                    }
+
+                  </div>
+
+                </details>
+
+              `;
+
+            }
+          )
+          .join("");
+
     }
 
-    function moveTeam(index, direction) {
-      if (competitionState?.is_locked) return;
-      const target = index + direction;
-      if (target < 0 || target >= 10) return;
-      [ranking[index], ranking[target]] = [ranking[target], ranking[index]];
+
+    // ==========================================================
+    // PREDICTION EDITING
+    // ==========================================================
+
+    function moveTeam(
+      index,
+      direction
+    ) {
+
+      if (
+        competitionState?.is_locked
+      ) {
+        return;
+      }
+
+
+      const target =
+        index +
+        direction;
+
+
+      if (
+        target < 0 ||
+        target >= 10
+      ) {
+        return;
+      }
+
+
+      [
+        ranking[index],
+        ranking[target]
+      ] =
+      [
+        ranking[target],
+        ranking[index]
+      ];
+
+
       markChanged();
+
       render();
+
     }
+
 
     function removeTeam(index) {
-      if (competitionState?.is_locked) return;
-      ranking[index] = null;
+
+      if (
+        competitionState?.is_locked
+      ) {
+        return;
+      }
+
+
+      ranking[index] =
+        null;
+
+
       markChanged();
+
       render();
+
     }
+
 
     function markChanged() {
-      if (competitionState?.is_locked) return;
-      const pill = document.getElementById("saveStatus");
-      pill.textContent = "Unsaved changes";
-      pill.classList.remove("saved");
+
+      if (
+        competitionState?.is_locked
+      ) {
+        return;
+      }
+
+
+      const pill =
+        document.getElementById(
+          "saveStatus"
+        );
+
+
+      pill.textContent =
+        "Unsaved changes";
+
+
+      pill.classList.remove(
+        "saved"
+      );
+
     }
+
+
+    // ==========================================================
+    // SAVE PREDICTION
+    // ==========================================================
 
     async function savePrediction() {
-      predictionMessage.textContent = "";
 
-      if (competitionState?.is_locked) {
-        setMessage(predictionMessage, "Predictions are locked.");
+      predictionMessage.textContent =
+        "";
+
+
+      if (
+        competitionState?.is_locked
+      ) {
+
+        setMessage(
+          predictionMessage,
+          "Predictions are locked."
+        );
+
         return;
+
       }
 
-      if (ranking.length !== 10 || !ranking.every(Boolean)) {
-        setMessage(predictionMessage, "Choose all 10 teams before submitting.");
+
+      if (
+        ranking.length !== 10 ||
+        !ranking.every(Boolean)
+      ) {
+
+        setMessage(
+          predictionMessage,
+          "Choose all 10 teams before submitting."
+        );
+
         return;
+
       }
 
-      const button = document.getElementById("submitPredictionBtn");
-      button.disabled = true;
-      button.textContent = "Saving…";
+
+      const button =
+        document.getElementById(
+          "submitPredictionBtn"
+        );
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        "Saving…";
+
 
       try {
-        const { error } = await supabase.rpc("save_my_prediction", {
-          p_slug: COMPETITION_SLUG,
-          p_team_ids: ranking.map(team => team.id)
-        });
 
-        if (error) throw error;
+        const { error } =
+          await supabase.rpc(
+            "save_my_prediction",
+            {
 
-        setMessage(predictionMessage, "Prediction saved successfully.", true);
+              p_slug:
+                COMPETITION_SLUG,
+
+              p_team_ids:
+                ranking.map(
+                  team =>
+                    team.id
+                )
+
+            }
+          );
+
+
+        if (error)
+          throw error;
+
+
+        setMessage(
+          predictionMessage,
+          "Prediction saved successfully.",
+          true
+        );
+
+
         updateSaveStatus();
-        await Promise.all([loadSharedCompetitionData(), loadLeaderboard()]);
-      } catch (error) {
-        setMessage(predictionMessage, error?.message || "Could not save prediction.");
-      } finally {
-        button.disabled = false;
-        button.textContent = "Submit prediction";
+
+
+        await Promise.all([
+
+          loadSharedCompetitionData(),
+
+          loadLeaderboard()
+
+        ]);
+
       }
+
+      catch (error) {
+
+        setMessage(
+          predictionMessage,
+          error?.message ||
+          "Could not save prediction."
+        );
+
+      }
+
+      finally {
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          "Submit prediction";
+
+      }
+
     }
+
+
+    // ==========================================================
+    // TABS
+    // ==========================================================
 
     function switchTab(tabId) {
-      const validTabs = ["myPrediction", "players", "predictions", "leaderboard"];
-      
-      if (!validTabs.includes(tabId)) {
-        tabId = "myPrediction";
+
+      const validTabs = [
+
+        "myPrediction",
+
+        "players",
+
+        "leaderboard"
+
+      ];
+
+
+      if (
+        !validTabs.includes(
+          tabId
+        )
+      ) {
+
+        tabId =
+          "myPrediction";
+
       }
-      
-      document.querySelectorAll(".tab").forEach(tab => {
-        tab.classList.toggle("active", tab.dataset.tab === tabId);
-      });
-      
-      document.querySelectorAll(".tab-panel").forEach(panel => {
-        panel.classList.toggle("hidden", panel.id !== tabId);
-      });
-      
-      localStorage.setItem("plpActiveTab", tabId);
+
+
+      document
+        .querySelectorAll(
+          ".tab"
+        )
+        .forEach(
+          tab => {
+
+            tab.classList.toggle(
+
+              "active",
+
+              tab.dataset.tab ===
+                tabId
+
+            );
+
+          }
+        );
+
+
+      document
+        .querySelectorAll(
+          ".tab-panel"
+        )
+        .forEach(
+          panel => {
+
+            panel.classList.toggle(
+
+              "hidden",
+
+              panel.id !==
+                tabId
+
+            );
+
+          }
+        );
+
+
+      localStorage.setItem(
+        "plpActiveTab",
+        tabId
+      );
+
     }
+
+
+    // ==========================================================
+    // HTML ESCAPE
+    // ==========================================================
 
     function escapeHtml(value) {
-      return String(value).replace(/[&<>"']/g, char => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      }[char]));
+
+      return String(value)
+        .replace(
+          /[&<>"']/g,
+          char => ({
+
+            "&":
+              "&amp;",
+
+            "<":
+              "&lt;",
+
+            ">":
+              "&gt;",
+
+            '"':
+              "&quot;",
+
+            "'":
+              "&#039;"
+
+          }[char])
+        );
+
     }
 
-    document.getElementById("joinCompetitionBtn").addEventListener("click", joinCompetition);
-    document.getElementById("createPlayerBtn").addEventListener("click", createPlayer);
-    document.getElementById("linkPlayerBtn").addEventListener("click", linkPlayer);
-    document.getElementById("submitPredictionBtn").addEventListener("click", savePrediction);
 
-    document.getElementById("clearBtn").addEventListener("click", () => {
-      if (competitionState?.is_locked) return;
-      ranking = Array(10).fill(null);
-      markChanged();
-      render();
-    });
+    // ==========================================================
+    // EVENTS
+    // ==========================================================
 
-    document.querySelectorAll(".tab").forEach(tab => {
-      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
-    });
+    document
+      .getElementById(
+        "joinCompetitionBtn"
+      )
+      .addEventListener(
+        "click",
+        joinCompetition
+      );
 
-    window.addEventListener("resize", () => {
-      updatePredictionHelpText();
 
-      if (!document.getElementById("appScreen").classList.contains("hidden")) {
-        renderRanking();
+    document
+      .getElementById(
+        "createPlayerBtn"
+      )
+      .addEventListener(
+        "click",
+        createPlayer
+      );
+
+
+    document
+      .getElementById(
+        "linkPlayerBtn"
+      )
+      .addEventListener(
+        "click",
+        linkPlayer
+      );
+
+
+    document
+      .getElementById(
+        "submitPredictionBtn"
+      )
+      .addEventListener(
+        "click",
+        savePrediction
+      );
+
+
+    document
+      .getElementById(
+        "clearBtn"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          if (
+            competitionState?.is_locked
+          ) {
+            return;
+          }
+
+
+          ranking =
+            Array(10)
+              .fill(null);
+
+
+          markChanged();
+
+          render();
+
+        }
+      );
+
+
+    document
+      .querySelectorAll(
+        ".tab"
+      )
+      .forEach(
+        tab => {
+
+          tab.addEventListener(
+            "click",
+            () =>
+              switchTab(
+                tab.dataset.tab
+              )
+          );
+
+        }
+      );
+
+
+    window.addEventListener(
+      "resize",
+      () => {
+
+        updatePredictionHelpText();
+
+
+        if (
+          !document
+            .getElementById(
+              "appScreen"
+            )
+            .classList
+            .contains(
+              "hidden"
+            )
+        ) {
+
+          renderRanking();
+
+        }
+
       }
-    });
+    );
+
+
+    // ==========================================================
+    // START
+    // ==========================================================
 
     initialise();
+
   </script>
+
 </body>
 </html>
