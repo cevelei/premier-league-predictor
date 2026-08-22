@@ -481,6 +481,9 @@
       applyCompetitionState();
       render();
       showScreen("app");
+      
+      const savedTab = localStorage.getItem("plpActiveTab") || "myPrediction";
+      switchTab(savedTab);
     }
 
     function applyCompetitionState() {
@@ -895,13 +898,21 @@
     }
 
     function switchTab(tabId) {
+      const validTabs = ["myPrediction", "players", "predictions", "leaderboard"];
+      
+      if (!validTabs.includes(tabId)) {
+        tabId = "myPrediction";
+      }
+      
       document.querySelectorAll(".tab").forEach(tab => {
         tab.classList.toggle("active", tab.dataset.tab === tabId);
       });
-
+      
       document.querySelectorAll(".tab-panel").forEach(panel => {
         panel.classList.toggle("hidden", panel.id !== tabId);
       });
+      
+      localStorage.setItem("plpActiveTab", tabId);
     }
 
     function escapeHtml(value) {
