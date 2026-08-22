@@ -661,15 +661,21 @@ button:disabled { opacity: .35; cursor: default; }
 
 @media (max-width: 600px) {
   .tabs {
-    grid-template-columns: repeat(3, 1fr);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
     padding: 4px;
   }
 
   .tab {
+    width: 100%;
     min-width: 0;
-    padding: 8px 4px;
-    font-size: 14px;
+    min-height: 40px;
+    padding: 8px 2px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
   }
 
   .leader-row summary {
