@@ -770,3 +770,17 @@ button:disabled { opacity: .35; cursor: default; }
     min-width: 40px;
   }
 }
+
+/* Highlight the current leader(s) */
+.leader-row-top {
+  border-color: rgba(255, 40, 130, 0.35);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 40, 130, 0.055),
+    rgba(55, 0, 60, 0.015)
+  );
+}
+
+.leader-row-top .leader-position {
+  color: #ff2882;
+}
