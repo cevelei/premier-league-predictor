@@ -661,7 +661,7 @@ button:disabled { opacity: .35; cursor: default; }
 
 @media (max-width: 600px) {
   .tabs {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 3fr 1fr;
   }
 
   .leader-row summary {
