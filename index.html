@@ -692,10 +692,20 @@
           <div class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</div>
           <div class="player-meta">
             <strong>${escapeHtml(player.player_name)}</strong>
-            <span>${player.is_submitted ? "Prediction submitted" : "Waiting for prediction"}</span>
+            <span>
+              ${player.is_submitted
+                ? "Prediction submitted"
+                : competitionState?.is_locked
+                  ? "Missed deadline"
+                  : "Waiting for prediction"}
+            </span>
           </div>
           <span class="submission-badge ${player.is_submitted ? "yes" : "no"}">
-            ${player.is_submitted ? "Submitted" : "Not yet"}
+            ${player.is_submitted
+              ? "Submitted"
+              : competitionState?.is_locked
+                ? "No prediction"
+                : "Not yet"}
           </span>
         </div>
       `).join("");
@@ -808,15 +818,25 @@
         return;
       }
 
+      let previousScore = null;
+      let displayedPosition = 0;
+      
       container.innerHTML = predictorLeaderboard.map((player, index) => {
+        if (player.score !== previousScore) {
+          displayedPosition = index + 1;
+          previousScore = player.score;
+        }
+        
+        const isLeader = displayedPosition === 1;
+        
         const breakdown = playerBreakdown
           .filter(row => row.player_id === player.player_id)
           .sort((a, b) => a.predicted_position - b.predicted_position);
 
         return `
-          <details class="leader-row">
+          <details class="leader-row ${isLeader ? "leader-row-top" : ""}">
             <summary>
-              <span class="leader-position">${index + 1}</span>
+              <span class="leader-position">${displayedPosition}</span>
               <span class="avatar">${escapeHtml(player.player_name.charAt(0).toUpperCase())}</span>
               <span class="leader-name">
                 <strong>${escapeHtml(player.player_name)}</strong>
